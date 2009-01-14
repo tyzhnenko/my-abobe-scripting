@@ -128,7 +128,7 @@ AutomaticStackingFiles.prototype.run = function()
 		return retval; 
 	} 
 	//app.document.chooseMenuItem('submenu/Stack'); 
-	var AutoStackCommand = new MenuElement("command", "Auto stacking", "at the beginning of submenu/Stack", ); 
+	var AutoStackCommand = new MenuElement("command", "Auto stacking", "at the beginning of submenu/Stack"); 
 	AutoStackCommand.onSelect = function(m) 
 	{ 
 		//alert('start'); 
