@@ -22,7 +22,7 @@ function AutomaticStackingFiles()
 	The context in which this snippet can run; Bridge must be running. 
 	@type String 
 	*/ 
-	//this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS3 as the Target.\n"; 
+	//this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n"; 
 	this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n"; 
 	$.level = 0; // Debugging level 
 
@@ -92,12 +92,8 @@ function RunAutoStacking()
 			$.writeln("!!! Need to stop WHILE");
 			break;
 		}
-		//CollapseStacks(); 
 		var vthumbs = doc.visibleThumbnails;
 		$.writeln("= Total thumbs - " + doc.visibleThumbnails.length.toString());
-		//doc.deselectAll(); 
-		//doc.select(vthumbs[i]); 
-		//doc.reveal(vthumbs[i]); 
 
 		for ( i in vthumbs)
 		{
@@ -127,39 +123,7 @@ function RunAutoStacking()
 		}
 		iteration++;
 	}
-/*
-	for (var len = 0; len < vthumb.length; len++ ) 
-	{ 
-		doc.deselectAll(); 
-		doc.select(vthumb[len]); 
-		doc.reveal(vthumb[len]); 
-		for ( var k = len+1; k < vthumb.length; k++ ) 
-		{ 
-			//alert(k); 
-			if ( getFileName( vthumb[len] ) == getFileName( vthumb[k]) ) 
-				doc.select(vthumb[k]); 
-			else 
-			{ 
-				if (doc.selectionLength > 1) 
-					StackPhoto(); 
-				break; 
-			} 
-			if (k == vthumb.length-1) 
-			{ 
-				if (doc.selectionLength > 1) 
-				StackPhoto(); 
-			} 
-
-		//if (doc.selectionLength > 1) 
-		// StackPhoto(); 
-		} 
-		//delete vthumb; 
-		//var 
-		//vthumb = @doc.visibleThumbnails; 
-	} 
-*/
 	doc.sorts = currSort; 
-	//doc.reveal(doc.visibleThumbnails[0]); 
 	CollapseStacks(); 
 	delete currSort; 
 	delete vthumb; 
