@@ -1,9 +1,9 @@
-/////////////////// 
+﻿/////////////////// 
 /// Name: Auto stacking files 
 /// Description: This script enable auto stacking files by name 
 /// Author: Tyzhnenko Dmitry 
 /// E-mail: t.dmitry@gmail.com 
-/// Version: 0.32 
+/// Version: 0.35
 /////////////////// 
 
 /* 
@@ -22,10 +22,11 @@ function AutomaticStackingFiles()
 	The context in which this snippet can run; Bridge must be running. 
 	@type String 
 	*/ 
-	this.requiredContext = "\tAdobe Bridge CS3 must be running.\n\tExecute against Bridge CS3 as the Target.\n"; 
-	$.level = 1; // Debugging level 
+	//this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS3 as the Target.\n"; 
+	this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n"; 
+	$.level = 0; // Debugging level 
 
-	this.version = "0.32"; 
+	this.version = "0.35"; 
 	this.author = "Tyzhenenko Dmitry"; 
 
 	/** 
@@ -40,11 +41,11 @@ function AutomaticStackingFiles()
 function RunAutoStacking() 
 { 
 	var doc = app.document; 
-	var thumb = doc.thumbnail; 
-	var vthumb = doc.visibleThumbnails; 
+	//var thumb = doc.thumbnail; 
+	//var vthumb = doc.visibleThumbnails; 
 	var currSort = doc.sorts; 
 
-
+	$.writeln("Start stacking");
 
 	function StackPhoto() 
 	{ 
@@ -70,7 +71,7 @@ function RunAutoStacking()
 		return t.name.substr(0, dot); 
 	} 
 
-	CollapseStacks(); 
+	
 
 	var SortObj = {}; 
 	SortObj.name = "name"; 
@@ -80,6 +81,53 @@ function RunAutoStacking()
 	SortsArray.push(SortObj); 
 	doc.sorts = SortsArray; 
 
+	var iteration = 0 
+	var stop = false;
+	while (true)
+	{
+		$.writeln("= ");
+		$.writeln("= While iteration  - "+ iteration.toString());
+		if (stop) 
+		{
+			$.writeln("!!! Need to stop WHILE");
+			break;
+		}
+		//CollapseStacks(); 
+		var vthumbs = doc.visibleThumbnails;
+		$.writeln("= Total thumbs - " + doc.visibleThumbnails.length.toString());
+		//doc.deselectAll(); 
+		//doc.select(vthumbs[i]); 
+		//doc.reveal(vthumbs[i]); 
+
+		for ( i in vthumbs)
+		{
+			CollapseStacks(); 
+			doc.deselectAll(); 
+			doc.reveal(vthumbs[i]);
+			if ( vthumbs.length == parseInt(i)+1)
+			{
+				$.writeln("!!! LAST iteration");
+				stop = true;
+				break;
+			}
+			$.writeln("== First name - " + vthumbs[i].name);
+			$.writeln("== Next name - " + vthumbs[parseInt(i)+1].name);		
+			$.writeln("== Last name - " + vthumbs[vthumbs.length-1].name);
+			$.writeln("==");
+			if ( getFileName( vthumbs[i] ) == getFileName( vthumbs[parseInt(i)+1]) ) 
+			{
+				doc.select(vthumbs[i]);
+				$.writeln("=== Add to select - " + vthumbs[i].name);
+				doc.select(vthumbs[parseInt(i)+1]);
+				$.writeln("=== Add to select - " + vthumbs[parseInt(i)+1].name);		
+				$.writeln("=== Stacking");
+				StackPhoto(); 
+				break;
+			}
+		}
+		iteration++;
+	}
+/*
 	for (var len = 0; len < vthumb.length; len++ ) 
 	{ 
 		doc.deselectAll(); 
@@ -109,15 +157,15 @@ function RunAutoStacking()
 		//var 
 		//vthumb = @doc.visibleThumbnails; 
 	} 
-
+*/
 	doc.sorts = currSort; 
-	doc.reveal(doc.visibleThumbnails[0]); 
-
+	//doc.reveal(doc.visibleThumbnails[0]); 
+	CollapseStacks(); 
 	delete currSort; 
 	delete vthumb; 
 	delete thumb; 
 	delete doc; 
-
+	$.writeln("Finish stacking");
 } 
 
 AutomaticStackingFiles.prototype.run = function() 
