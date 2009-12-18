@@ -41,7 +41,7 @@ onThumbSelection = function( evt ) {
         
 function addTopBarPanel(bar) {
     bar.textPanel = bar.add( "panel", [5, 5, 300, 30], undefined);
-    bar.textPanel.textField = bar.textFieldtPanel.add( "statictext", [5, 2, 200, 22],"");
+    bar.textPanel.textField = bar.textPanel.add( "statictext", [5, 2, 200, 22],"");
 }
 // Create the PathBar on the top navbar of the document
 
