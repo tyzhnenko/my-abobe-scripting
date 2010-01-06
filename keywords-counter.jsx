@@ -3,7 +3,7 @@
 /// Description: This script show tatal keywords in file
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.5
+/// Version: 0.6
 ///////////////////
 /*
     Changelog
