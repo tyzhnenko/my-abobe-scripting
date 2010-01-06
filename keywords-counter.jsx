@@ -7,6 +7,10 @@
 ///////////////////
 /*
     Changelog
+    0.6
+     - add copy-paste
+     - remember checkboxes
+     - fix bug with empty metadata
     0.5
      - add sync metadata
     0.4
@@ -26,8 +30,11 @@
 */
 /*
     TODO:
+    add checkbox to show copyed data
+    add small thumb with master file
     change to dynamic lyout
     save panel position
+
 */
 
 String.prototype.trim = function () {
@@ -43,7 +50,7 @@ function KeywordCounter()
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
     //$.level = 5; // Debugging level
 
-    this.version = "0.1";
+    this.version = "0.6";
     this.author = "Tyzhenenko Dmitry";
 
     $.debug = 5;
@@ -80,35 +87,30 @@ KeywordCounter.prototype.run = function()
     this.fieldFilenameRefs = new Array();
     this.masterThumb = new Array();
     this.chkSyncBox = new Array();
+    this.clipboardMaster = new Array();
+    this.flags = { clipEmpty:true};
     var wrapper = this;
 
     function changeTotal( str)
     {
-        //topbar = wrapper.paletteRefs[0].content;
         field = wrapper.fieldTotalRefs[0];
         field.text = "Total : " + str;
     }
 
     function changeKeywords( str)
     {
-        //topbar = wrapper.paletteRefs[0].content;
-        //topbar.editTitlePanel.editTitleField.text = str;
         keywords = wrapper.editKeywordsRefs[0];
         keywords.text = str ;
     }
 
     function changeTitle( str)
     {
-        //topbar = wrapper.paletteRefs[0].content;
-        //topbar.editTitlePanel.editTitleField.text = str;
         title = wrapper.editTitleRefs[0];
         title.text = str;
     }
 
     function changeDescription( str)
     {
-
-
         descr = wrapper.editDescrRefs[0];
         descr.text = str;
     }
@@ -163,12 +165,12 @@ KeywordCounter.prototype.run = function()
             {
                 for (var k in keywords)
                 {
-                    keywords[k] = keywords[k].trim();
+                        keywords[k] = keywords[k].trim();
                 }
                 keywords = keywords.sort();
                 while  ( keywords[0] == "" )
                 {
-                    keywords.shift();
+                        keywords.shift();
                 }
 
                 xmp.deleteProperty(XMPConst.NS_DC,"subject");
@@ -177,7 +179,6 @@ KeywordCounter.prototype.run = function()
                     xmp.appendArrayItem(XMPConst.NS_DC, "subject", keywords[k], 0, XMPConst.ARRAY_IS_ORDERED);
                 }
             }
-            //$.writeln(xmp.dumpObject());
             var updatedPacket = xmp.serialize(XMPConst.SERIALIZE_OMIT_PACKET_WRAPPER | XMPConst.SERIALIZE_USE_COMPACT_FORMAT);
             app.synchronousMode = true;
             thumb.metadata = new Metadata(updatedPacket);
@@ -201,8 +202,32 @@ KeywordCounter.prototype.run = function()
         }
     }
 
+    function copyClipboardMetadata( thumb)
+    {
+        wrapper.clipboardMaster.length = 0;
+
+        wrapper.clipboardMaster.push( thumb)
+        wrapper.flags.clipEmpty = false;
+    }
+
+    function pasteClipboardMetadata( thumbsList)
+    {
+        if (!wrapper.flags.clipEmpty)
+            syncMetadata(wrapper.clipboardMaster[0],thumbsList, { title:wrapper.chkSyncBox[0].value, 
+descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
+        else
+            alert("nothing in clip");
+    }
+
+    function reselectFiles()
+    {
+        t_thumb = app.document.selections[0];
+        app.document.deselectAll();
+        app.document.select(t_thumb);
+    }
+
     function addSyncPanel( bar) {
-        bar.SyncPanel = bar.add( "panel", [ 3, 410, 280, 480], '');
+        bar.SyncPanel = bar.add( "panel", [ 3, 410, 280, 500], '');
         bar.SyncPanel.textFilenameField = bar.SyncPanel.add( "statictext", [5, 5, 270, 25], "File : n/a");
         wrapper.fieldFilenameRefs.push(bar.SyncPanel.textFilenameField);
         bar.SyncPanel.btnSave = bar.SyncPanel.add('button', [3, 30, 85, 55], 'Save');
@@ -212,6 +237,15 @@ KeywordCounter.prototype.run = function()
         bar.SyncPanel.btnSync = bar.SyncPanel.add('button',  [90, 30, 172 , 55], 'Sync');
         wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnSync );
         bar.SyncPanel.btnSync.enabled=false;
+
+        bar.SyncPanel.btnCopy = bar.SyncPanel.add('button', [3, 60, 85, 85], 'Copy');
+        wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnCopy );
+        bar.SyncPanel.btnCopy.enabled=false;
+
+        bar.SyncPanel.btnPaste = bar.SyncPanel.add('button',  [90, 60, 172 , 85], 'Paste');
+        wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnPaste );
+        bar.SyncPanel.btnPaste.enabled=false;
+
 
         bar.SyncPanel.btnSave.onClick = function()
         {
@@ -225,13 +259,11 @@ KeywordCounter.prototype.run = function()
                 new_keywords = editKeywords.text.split(",");
                 for (var k in new_keywords)
                 {
-                    new_keywords[k] = new_keywords[k].trim();
+                        new_keywords[k] = new_keywords[k].trim();
                 }
                 new_keywords = new_keywords.sort();
                 saveMetadata(app.document.selections[0], new_title, new_descr, new_keywords);
-                t_thumb = app.document.selections[0];
-                app.document.deselectAll();
-                app.document.select(t_thumb);
+                reselectFiles()
             }
             else
             {
@@ -245,31 +277,53 @@ KeywordCounter.prototype.run = function()
                 alert("Please select checkbox");
             else
             {
-                var b = (Window.confirm("Really sync matadata?")) ? true : false;
-                if ( b ) syncMetadata(wrapper.masterThumb[0], app.document.selections, { title:wrapper.chkSyncBox[0].value, descr:wrapper.chkSyncBox[1].value, 
-keywords:wrapper.chkSyncBox[2].value})
+                syncMetadata(wrapper.masterThumb[0], app.document.selections, { title:wrapper.chkSyncBox[0].value, 
+descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
+                reselectFiles();
             }
+        }
+
+        bar.SyncPanel.btnCopy.onClick = function()
+        {
+
+            if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
+                alert("Please select checkbox");
+            else
+            {
+                copyClipboardMetadata(app.document.selections[0]);
+                wrapper.flags.clipEmpty = false;
+            }
+        }
+
+        bar.SyncPanel.btnPaste.onClick = function()
+        {
+            if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
+                alert("Please select checkbox");
+            else
+            {
+                pasteClipboardMetadata( app.document.selections);
+                reselectFiles();
+            }
+
         }
 
     }
 
     onThumbSelection = function( evt ) {
-            //$.writeln( evt.object.constructor.name + " call " +evt.type + " Event" );
             if ( evt.type == "selectionsChanged" ) {
-                //$.writeln( "Thumbnail Selected: " + app.document.selections[0].name );
                 if (  app.document.selections.length > 0 && app.document.selections[0].type == "file")
                 {
                     if (app.document.selections.length == 1)
                     {
+                        wrapper.masterThumb.length = 0;
                         wrapper.masterThumb.push(app.document.selections[0]);
                         md = app.document.selections[0].synchronousMetadata;
                         md.namespace =  "http://purl.org/dc/elements/1.1/";
-                        changeTotal( md.subject.length);
-                        changeKeywords( md.subject.join(", "));
-                        changeTitle( md.title[0] ? md.title[0] : "");
-                        changeDescription( md.description[0] ? md.description[0] : "");
+                        changeTotal( md.subject.length );
+                        changeKeywords(  md.subject ? md.subject.join(", ") : "" );
+                        changeTitle( md.title ? md.title[0] : "");
+                        changeDescription( md.description ? md.description[0] : "");
                         changeFilename(app.document.selections[0].name);
-                        //$.writeln("Total :  " + md.Keywords.length + ", list:" + md.Keywords );
                     }
                     else
                     {
@@ -286,30 +340,18 @@ keywords:wrapper.chkSyncBox[2].value})
                             md = app.document.selections[0].synchronousMetadata;
                             md.namespace =  "http://purl.org/dc/elements/1.1/";
                             changeTotal( md.subject.length);
-                            changeKeywords( md.subject.join(", "));
-                            changeTitle( md.title[0] ? md.title[0] : "");
-                            changeDescription( md.description[0] ? md.description[0] : "");
+                            changeKeywords( md.subject ? md.subject.join(", ") : "");
+                            changeTitle( md.title ? md.title[0] : "");
+                            changeDescription( md.description ? md.description[0] : "");
                             changeFilename(app.document.selections[0].name);
                         }
                     }
 
                     if ( app.document.selections.length == 1 )
                     {
-                        wrapper.fieldFilenameRefs[1].enabled = true;
-                        for ( i in wrapper.chkSyncBox)
-                        {
-                            wrapper.chkSyncBox[i].enabled = false;
-                            wrapper.chkSyncBox[i].value = false;
-                        }
-                    }
-                    else
-                    {
-                        wrapper.fieldFilenameRefs[1].enabled = false;
-                    }
-
-                    if ( app.document.selections.length > 1 )
-                    {
-                        wrapper.fieldFilenameRefs[2].enabled = true;
+                        wrapper.fieldFilenameRefs[1].enabled = true; // Save button
+                        wrapper.fieldFilenameRefs[3].enabled = true; // Copy button
+                        if (!wrapper.flags.clipEmpty) wrapper.fieldFilenameRefs[4].enabled = true; // Paste button
                         for ( i in wrapper.chkSyncBox)
                         {
                             wrapper.chkSyncBox[i].enabled = true;
@@ -317,12 +359,24 @@ keywords:wrapper.chkSyncBox[2].value})
                     }
                     else
                     {
-                        wrapper.fieldFilenameRefs[2].enabled = false;
+                        wrapper.fieldFilenameRefs[1].enabled = false; // Save button
+                        wrapper.fieldFilenameRefs[3].enabled = false; // Copy button
+                        wrapper.fieldFilenameRefs[4].enabled = false; // Paste button
+                    }
+
+
+                    if ( app.document.selections.length > 1 )
+                    {
+                        wrapper.fieldFilenameRefs[2].enabled = true; // Sync button
+                        if (!wrapper.flags.clipEmpty) wrapper.fieldFilenameRefs[4].enabled = true; // Paste button
                         for ( i in wrapper.chkSyncBox)
                         {
-                            wrapper.chkSyncBox[i].enabled = false;
-                            wrapper.chkSyncBox[i].value = false;
+                            wrapper.chkSyncBox[i].enabled = true;
                         }
+                    }
+                    else
+                    {
+                        wrapper.fieldFilenameRefs[2].enabled = false; // Sync button
                     }
                 }
                 else
@@ -333,11 +387,13 @@ keywords:wrapper.chkSyncBox[2].value})
                     changeDescription("" );
                     changeFilename( "n/a");
                     wrapper.masterThumb.length = 0;
-                    wrapper.fieldFilenameRefs[2].enabled = false;
+                    wrapper.fieldFilenameRefs[1].enabled = false; // Save button
+                    wrapper.fieldFilenameRefs[2].enabled = false; // Sync button
+                    wrapper.fieldFilenameRefs[3].enabled = false; // Copy button
+                    wrapper.fieldFilenameRefs[4].enabled = false; // Paste button
                     for ( i in wrapper.chkSyncBox)
                     {
                         wrapper.chkSyncBox[i].enabled = false;
-                        wrapper.chkSyncBox[i].value = false;
                     }
                 }
             }
@@ -352,6 +408,7 @@ keywords:wrapper.chkSyncBox[2].value})
         ";
 */
         // Create the TabbedPalette object, of type "script"
+
         var keywordPalette = new TabbedPalette( doc, "Stock Palette", "KeyUIPalette", "script" );
         wrapper.paletteRefs.push(keywordPalette);
 
@@ -369,8 +426,8 @@ keywords:wrapper.chkSyncBox[2].value})
             if( evt.type == "create" ) {
                 // Action to take on document creation
                 //addNavBar( evt.object );
-                app.eventHandlers.push( { handler: onThumbSelection} );
                 addKeywordPalette(app.document);
+                app.eventHandlers.push( { handler: onThumbSelection} );
             }
         }
     }
@@ -381,7 +438,9 @@ keywords:wrapper.chkSyncBox[2].value})
         addKeywordPalette(app.documents[i]);
     }
     app.eventHandlers.push( { handler: onDocCreate } );
-
+    
+    //app.eventHandlers.push( { handler: onThumbSelection} );
+    //addKeywordPalette(app.document);
 }
 
 KeywordCounter.prototype.canRun = function()
@@ -398,7 +457,6 @@ KeywordCounter.prototype.canRun = function()
     $.writeln(this.requiredContext);
     return false;
 }
-
 
 if(typeof(KeywordCounter_unitTest) == "undefined") {
     new KeywordCounter().run();
