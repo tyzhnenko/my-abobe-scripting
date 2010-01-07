@@ -50,7 +50,7 @@ function KeywordCounter()
     @type String
     */
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
-    $.level = 5; // Debugging level
+    //$.level = 5; // Debugging level
 
     this.version = "0.61";
     this.author = "Tyzhenenko Dmitry";
@@ -466,13 +466,19 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
         }
     }
     // Add the palette to all open Bridge browser windows
-    for(var i = 0;i < app.documents.length;i++)
+    if ($.level == 0 )
     {
-        addKeywordPalette(app.documents[i]);
+        for(var i = 0;i < app.documents.length;i++)
+        {
+            addKeywordPalette(app.documents[i]);
+        }
+      app.eventHandlers.push( { handler: onDocCreate } );
     }
-    app.eventHandlers.push( { handler: onDocCreate } );
-    //addKeywordPalette(app.document);
-    //app.eventHandlers.push( { handler: onThumbSelection} );
+    else
+    {
+        addKeywordPalette(app.document);
+        app.eventHandlers.push( { handler: onThumbSelection} );
+    }
 }
 
 KeywordCounter.prototype.canRun = function()
