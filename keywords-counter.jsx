@@ -3,10 +3,14 @@
 /// Description: This script show tatal keywords in file
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.6
+/// Version: 0.61
 ///////////////////
 /*
     Changelog
+    0.61
+     - add checkbox for sort/unsort keywords
+     - add unique keywords function
+     - fix "for" statements for array
     0.6
      - add copy-paste
      - remember checkboxes
@@ -37,9 +41,7 @@
 
 */
 
-String.prototype.trim = function () {
-    return this.replace(/^\s*/, "").replace(/\s*$/, "");
-}
+
 
 function KeywordCounter()
 {
@@ -48,12 +50,10 @@ function KeywordCounter()
     @type String
     */
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
-    //$.level = 5; // Debugging level
+    $.level = 5; // Debugging level
 
-    this.version = "0.6";
+    this.version = "0.61";
     this.author = "Tyzhenenko Dmitry";
-
-    $.debug = 5;
 }
 
 KeywordCounter.prototype.run = function()
@@ -63,6 +63,27 @@ KeywordCounter.prototype.run = function()
         retval = false;
         return retval;
     }
+
+    String.prototype.trim = function () {
+        return this.replace(/^\s*/, "").replace(/\s*$/, "");
+    }
+
+    Array.prototype.unique = function () {
+        // Thx for Martin
+        // Get from http://www.martienus.com/code/javascript-remove-duplicates-from-array.html
+        var r = new Array();
+        o:for(var i = 0, n = this.length; i < n; i++)
+        {
+            for(var x = 0, y = r.length; x < y; x++)
+            {
+                if(r[x]==this[i])  { continue o; }
+            }
+            r[r.length] = this[i];
+        }
+        return r;
+    }
+
+
 
     if( xmpLib == undefined )
     {
@@ -88,11 +109,13 @@ KeywordCounter.prototype.run = function()
     this.masterThumb = new Array();
     this.chkSyncBox = new Array();
     this.clipboardMaster = new Array();
-    this.flags = { clipEmpty:true};
+    this.chkSortBox = new Array();
+    this.flags = { clipEmpty:true };
     var wrapper = this;
 
     function changeTotal( str)
     {
+        //topbar = wrapper.paletteRefs[0].content;
         field = wrapper.fieldTotalRefs[0];
         field.text = "Total : " + str;
     }
@@ -148,9 +171,13 @@ KeywordCounter.prototype.run = function()
         bar.KeywordsPanel.chkSyncKeywords = bar.KeywordsPanel.add( "checkbox", [275, 8, 295, 28],"");
         bar.KeywordsPanel.chkSyncKeywords.enabled = false;
         wrapper.chkSyncBox.push(bar.KeywordsPanel.chkSyncKeywords);
+        bar.KeywordsPanel.chkSortKeywords = bar.KeywordsPanel.add( "checkbox", [105, 178, 150, 195],"Sort");
+        bar.KeywordsPanel.chkSortKeywords.enabled = true;
+        bar.KeywordsPanel.chkSortKeywords.value= true;
+        wrapper.chkSortBox.push(bar.KeywordsPanel.chkSortKeywords);
     }
 
-    function saveMetadata( thumb, title, descr, keywords)
+    function saveMetadata( thumb, title, descr, keywords, sort)
     {
         if ( title != null || descr != null || keywords != null)
         {
@@ -163,18 +190,19 @@ KeywordCounter.prototype.run = function()
             if (descr != null) xmp.setLocalizedText(XMPConst.NS_DC,"description","","x-default", descr);
             if (keywords != null)
             {
-                for (var k in keywords)
+                for (var k  =0 ; k < keywords.length; k++)
                 {
                         keywords[k] = keywords[k].trim();
                 }
-                keywords = keywords.sort();
-                while  ( keywords[0] == "" )
+                if (sort) keywords = keywords.sort();
+                keywords = keywords.unique();
+                for (var k  =0 ; k < keywords.length; k++)
                 {
-                        keywords.shift();
+                    keywords[k] = keywords[k].toLowerCase();
+                    if (keywords[k] == "") arr.splice(k,1)
                 }
-
                 xmp.deleteProperty(XMPConst.NS_DC,"subject");
-                for (var k in keywords )
+                for (var k  =0 ; k < keywords.length; k++ )
                 {
                     xmp.appendArrayItem(XMPConst.NS_DC, "subject", keywords[k], 0, XMPConst.ARRAY_IS_ORDERED);
                 }
@@ -196,7 +224,7 @@ KeywordCounter.prototype.run = function()
         if (params.title == true) master_title = md.title[0] ? md.title[0] : "";
         if (params.descr == true) master_descr = md.description[0] ? md.description[0] : "";
         if (params.keywords == true) master_keywords = md.subject ? md.subject : [];
-        for ( var k in listThumbs)
+        for ( var k  =0 ; k < listThumbs.length; k++)
         {
                 saveMetadata(listThumbs[k], master_title, master_descr, master_keywords);
         }
@@ -257,12 +285,11 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
                 new_descr = editDescr.text;
                 editKeywords =  wrapper.editKeywordsRefs[0];
                 new_keywords = editKeywords.text.split(",");
-                for (var k in new_keywords)
+                for (var k  =0 ; k < new_keywords.length; k++)
                 {
                         new_keywords[k] = new_keywords[k].trim();
                 }
-                new_keywords = new_keywords.sort();
-                saveMetadata(app.document.selections[0], new_title, new_descr, new_keywords);
+                saveMetadata(app.document.selections[0], new_title, new_descr, new_keywords,  wrapper.chkSortBox[0].value);
                 reselectFiles()
             }
             else
@@ -285,11 +312,12 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
 
         bar.SyncPanel.btnCopy.onClick = function()
         {
-
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
                 alert("Please select checkbox");
             else
             {
+                //var b = (Window.confirm("Really sync matadata?")) ? true : false;
+                //if ( b ) s
                 copyClipboardMetadata(app.document.selections[0]);
                 wrapper.flags.clipEmpty = false;
             }
@@ -301,6 +329,8 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                 alert("Please select checkbox");
             else
             {
+                //var b = (Window.confirm("Really sync matadata?")) ? true : false;
+                //if ( b ) s
                 pasteClipboardMetadata( app.document.selections);
                 reselectFiles();
             }
@@ -310,7 +340,9 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
     }
 
     onThumbSelection = function( evt ) {
+            //$.writeln( evt.object.constructor.name + " call " +evt.type + " Event" );
             if ( evt.type == "selectionsChanged" ) {
+                //$.writeln( "Thumbnail Selected: " + app.document.selections[0].name );
                 if (  app.document.selections.length > 0 && app.document.selections[0].type == "file")
                 {
                     if (app.document.selections.length == 1)
@@ -324,11 +356,12 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         changeTitle( md.title ? md.title[0] : "");
                         changeDescription( md.description ? md.description[0] : "");
                         changeFilename(app.document.selections[0].name);
+                        //$.writeln("Total :  " + md.Keywords.length + ", list:" + md.Keywords );
                     }
                     else
                     {
                         var flag = true;
-                        for ( i in  app.document.selections)
+                        for ( var i = 0; i < app.document.selections.length; i++ )
                         {
                                 if ( app.document.selections[i].name == wrapper.masterThumb[0].name ) { flag = false ; break;}
                         }
@@ -352,9 +385,10 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         wrapper.fieldFilenameRefs[1].enabled = true; // Save button
                         wrapper.fieldFilenameRefs[3].enabled = true; // Copy button
                         if (!wrapper.flags.clipEmpty) wrapper.fieldFilenameRefs[4].enabled = true; // Paste button
-                        for ( i in wrapper.chkSyncBox)
+                        for (var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                         {
                             wrapper.chkSyncBox[i].enabled = true;
+                            //wrapper.chkSyncBox[i].value = false;
                         }
                     }
                     else
@@ -369,7 +403,7 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                     {
                         wrapper.fieldFilenameRefs[2].enabled = true; // Sync button
                         if (!wrapper.flags.clipEmpty) wrapper.fieldFilenameRefs[4].enabled = true; // Paste button
-                        for ( i in wrapper.chkSyncBox)
+                        for ( var i = 0; i < wrapper.chkSyncBox.length; i++)
                         {
                             wrapper.chkSyncBox[i].enabled = true;
                         }
@@ -391,7 +425,7 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                     wrapper.fieldFilenameRefs[2].enabled = false; // Sync button
                     wrapper.fieldFilenameRefs[3].enabled = false; // Copy button
                     wrapper.fieldFilenameRefs[4].enabled = false; // Paste button
-                    for ( i in wrapper.chkSyncBox)
+                    for ( var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                     {
                         wrapper.chkSyncBox[i].enabled = false;
                     }
@@ -431,16 +465,14 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
             }
         }
     }
-
     // Add the palette to all open Bridge browser windows
     for(var i = 0;i < app.documents.length;i++)
     {
         addKeywordPalette(app.documents[i]);
     }
     app.eventHandlers.push( { handler: onDocCreate } );
-    
-    //app.eventHandlers.push( { handler: onThumbSelection} );
     //addKeywordPalette(app.document);
+    //app.eventHandlers.push( { handler: onThumbSelection} );
 }
 
 KeywordCounter.prototype.canRun = function()
@@ -458,6 +490,8 @@ KeywordCounter.prototype.canRun = function()
     return false;
 }
 
+
 if(typeof(KeywordCounter_unitTest) == "undefined") {
     new KeywordCounter().run();
 }
+
