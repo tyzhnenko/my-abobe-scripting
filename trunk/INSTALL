@@ -1,0 +1,11 @@
+INSTALL:
+
+Dowsnload scripts and put it to:
+
+Windows 7 or Vista:
+c:\Users\User\AppData\Roaming\Adobe\Bridge CS4\Startup Scripts\
+Windows XP:
+c:\Documents and Settings\User\Application Data\Adobe\Bridge CS4\Startup Scripts\
+restart Bridge
+
+If you not see new Panel named as 'Stock palette', go to Preferenses -> Startup scripts -> enable checkbox ketwords-countes. Restart Bridge again.
