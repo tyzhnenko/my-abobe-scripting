@@ -3,10 +3,13 @@
 /// Description: This script show tatal keywords in file
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.61
+/// Version: 0.65
 ///////////////////
 /*
     Changelog
+    0.65
+     - change to dynamic layout
+     - show count words in title and descr
     0.61
      - add checkbox for sort/unsort keywords
      - add unique keywords function
@@ -34,9 +37,10 @@
 */
 /*
     TODO:
+      3. с цветами - не знаю как у Вас но у меня в бридже все черное а это окошко светло серое - было бы здорого сделать его одного 
+цвета - как все плагины
     add checkbox to show copyed data
     add small thumb with master file
-    change to dynamic lyout
     save panel position
 
 */
@@ -52,7 +56,7 @@ function KeywordCounter()
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
     //$.level = 5; // Debugging level
 
-    this.version = "0.61";
+    this.version = "0.65";
     this.author = "Tyzhenenko Dmitry";
 }
 
@@ -83,8 +87,6 @@ KeywordCounter.prototype.run = function()
         return r;
     }
 
-
-
     if( xmpLib == undefined )
     {
         if( Folder.fs == "Windows" )
@@ -101,6 +103,9 @@ KeywordCounter.prototype.run = function()
     }
 
     this.paletteRefs = new Array();
+    this.panelTitle = new Array;
+    this.panelDesc = new Array;
+    this.panelKeywords = new Array;
     this.fieldTotalRefs = new Array();
     this.editKeywordsRefs = new Array();
     this.editTitleRefs = new Array();
@@ -115,9 +120,20 @@ KeywordCounter.prototype.run = function()
 
     function changeTotal( str)
     {
-        //topbar = wrapper.paletteRefs[0].content;
-        field = wrapper.fieldTotalRefs[0];
-        field.text = "Total : " + str;
+        field = wrapper.panelKeywords[0];
+        field.text = "Keywords (" + str + ")";
+    }
+
+    function changeTotalDescr( str)
+    {
+        field = wrapper.panelDesc[0];
+        field.text = "Description (" + str + ")";
+    }
+
+    function changeTotalTitle( str)
+    {
+        field = wrapper.panelTitle[0];
+        field.text = "Title (" + str + ")";
     }
 
     function changeKeywords( str)
@@ -145,36 +161,64 @@ KeywordCounter.prototype.run = function()
     }
 
     function addTitlePanel( bar) {
-        bar.TitlePanel = bar.add( "panel", [3, 3 , 300, 50], 'Title');
-        bar.TitlePanel.editTitleField = bar.TitlePanel.add( "edittext", [5, 8, 270, 28],"");
-        wrapper.editTitleRefs.push(bar.TitlePanel.editTitleField);
-        bar.TitlePanel.chkSyncTitle = bar.TitlePanel.add( "checkbox", [275, 8, 295, 28],"");
-        bar.TitlePanel.chkSyncTitle.enabled = false;
-        wrapper.chkSyncBox.push(bar.TitlePanel.chkSyncTitle);
+
+        var TitlePanel = bar.add( "panel", undefined, 'Title', );
+        wrapper.panelTitle.push(TitlePanel);
+        TitlePanel.orientation= "row";
+        TitlePanel.alignment = ["fill", "top"];
+
+        var editTitleField = TitlePanel.add( "edittext", undefined,"");
+        wrapper.editTitleRefs.push(editTitleField);
+        editTitleField.alignment = ["fill", "top"];
+
+        var chkSyncTitle = TitlePanel.add( "checkbox", undefined,"");
+        wrapper.chkSyncBox.push(chkSyncTitle);
+        chkSyncTitle.alignment = ["right", "top"];
+        chkSyncTitle.enabled = false;
+
+
     }
 
     function addDescrPanel( bar) {
-        bar.DescrPanel = bar.add( "panel", [3, 55, 300, 180], 'Description');
-        bar.DescrPanel.editDescrField = bar.DescrPanel.add( "edittext", [5, 8, 270, 100],"",  {multiline:true});
-        wrapper.editDescrRefs.push(bar.DescrPanel.editDescrField);
-        bar.DescrPanel.chkSyncDescr = bar.DescrPanel.add( "checkbox", [275, 8, 295, 28],"");
-        bar.DescrPanel.chkSyncDescr.enabled = false;
-        wrapper.chkSyncBox.push(bar.DescrPanel.chkSyncDescr);
+
+        var DescrPanel = bar.add( "panel", undefined, 'Description');
+        wrapper.panelDesc.push(DescrPanel);
+        DescrPanel.alignment = ["fill", "fill" ];
+        DescrPanel.alignChildren = ["fill", "fill"];
+        DescrPanel.orientation= "row";
+
+        var editDescrField = DescrPanel.add( "edittext", undefined,"",  {multiline:true});
+        editDescrField.alignment = ["fill", "fill"];
+        editDescrField.minimumSize = [100,40];
+        editDescrField.maximumSize = [4000,70];
+        wrapper.editDescrRefs.push(editDescrField);
+
+        var chkSyncDescr = DescrPanel.add( "checkbox", undefined,"");
+        wrapper.chkSyncBox.push(chkSyncDescr);
+        chkSyncDescr.alignment = ["right", "top"];
+        chkSyncDescr.enabled = false;
     }
 
     function addKeywordsPanel( bar) {
-        bar.KeywordsPanel = bar.add( "panel", [ 3, 190, 300, 400], 'Keywords');
-        bar.KeywordsPanel.editKeywordsField = bar.KeywordsPanel.add( "edittext", [5, 8, 270, 170],"",  {multiline:true});
-        wrapper.editKeywordsRefs.push(bar.KeywordsPanel.editKeywordsField);
-        bar.KeywordsPanel.textTotalField = bar.KeywordsPanel.add( "statictext", [5, 178, 100, 195],"Total : n/a file");
-        wrapper.fieldTotalRefs.push(bar.KeywordsPanel.textTotalField);
-        bar.KeywordsPanel.chkSyncKeywords = bar.KeywordsPanel.add( "checkbox", [275, 8, 295, 28],"");
-        bar.KeywordsPanel.chkSyncKeywords.enabled = false;
-        wrapper.chkSyncBox.push(bar.KeywordsPanel.chkSyncKeywords);
-        bar.KeywordsPanel.chkSortKeywords = bar.KeywordsPanel.add( "checkbox", [105, 178, 150, 195],"Sort");
-        bar.KeywordsPanel.chkSortKeywords.enabled = true;
-        bar.KeywordsPanel.chkSortKeywords.value= true;
-        wrapper.chkSortBox.push(bar.KeywordsPanel.chkSortKeywords);
+
+        var KeywordsPanel = bar.add( "panel", undefined, 'Keywords');
+        wrapper.panelKeywords.push(KeywordsPanel);
+        KeywordsPanel.preferredSize = [-1,200];
+        KeywordsPanel.orientation = "column";
+        KeywordsPanel.alignment = ["fill", "fill"];
+        KeywordsPanel.alignChildren = ["fill", "fill"];
+        KeywordsPanel.grp1  = KeywordsPanel.add( "group");
+        KeywordsPanel.grp1.orientation= "row";
+        var editKeywordsField = KeywordsPanel.grp1.add( "edittext", undefined,"",  {multiline:true});
+        wrapper.editKeywordsRefs.push(editKeywordsField);
+        editKeywordsField.minimumSize = [150,40];
+        editKeywordsField.maximumSize = [4000,250];
+        editKeywordsField.alignment = ["fill", "fill"];
+
+        var chkSyncKeywords = KeywordsPanel.grp1.add( "checkbox", undefined,"");
+        wrapper.chkSyncBox.push(chkSyncKeywords);
+        chkSyncKeywords.alignment = ["right", "top"];
+        chkSyncKeywords.enabled = false;
     }
 
     function saveMetadata( thumb, title, descr, keywords, sort)
@@ -199,8 +243,9 @@ KeywordCounter.prototype.run = function()
                 for (var k  =0 ; k < keywords.length; k++)
                 {
                     keywords[k] = keywords[k].toLowerCase();
-                    if (keywords[k] == "") arr.splice(k,1)
+                    if (keywords[k] == "") keywords.splice(k,1)
                 }
+
                 xmp.deleteProperty(XMPConst.NS_DC,"subject");
                 for (var k  =0 ; k < keywords.length; k++ )
                 {
@@ -255,27 +300,55 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
     }
 
     function addSyncPanel( bar) {
-        bar.SyncPanel = bar.add( "panel", [ 3, 410, 280, 500], '');
-        bar.SyncPanel.textFilenameField = bar.SyncPanel.add( "statictext", [5, 5, 270, 25], "File : n/a");
-        wrapper.fieldFilenameRefs.push(bar.SyncPanel.textFilenameField);
-        bar.SyncPanel.btnSave = bar.SyncPanel.add('button', [3, 30, 85, 55], 'Save');
-        wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnSave );
-        bar.SyncPanel.btnSave.enabled=false;
 
-        bar.SyncPanel.btnSync = bar.SyncPanel.add('button',  [90, 30, 172 , 55], 'Sync');
-        wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnSync );
-        bar.SyncPanel.btnSync.enabled=false;
+        var SyncPanel = bar.add( "panel", undefined, '');
+        SyncPanel.margins=5;
+        SyncPanel.spacing=5;
+        SyncPanel.maximumSize = [3000,100];
+        SyncPanel.alignment = ["fill", "fill"];
+        SyncPanel.alignChildren = ["fill", "fill"];
+        SyncPanel.orientation = "column";
+        var staticFile = SyncPanel.add( "statictext", undefined, 'File : n/a');
+        wrapper.fieldFilenameRefs.push(staticFile);
+        staticFile.minimumSize = [100, 15];
+        staticFile.alignment = ["fill", "top"];
 
-        bar.SyncPanel.btnCopy = bar.SyncPanel.add('button', [3, 60, 85, 85], 'Copy');
-        wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnCopy );
-        bar.SyncPanel.btnCopy.enabled=false;
+        var grpGlob = SyncPanel.add("group");
+        grpGlob.orientation = "row";
 
-        bar.SyncPanel.btnPaste = bar.SyncPanel.add('button',  [90, 60, 172 , 85], 'Paste');
-        wrapper.fieldFilenameRefs.push(bar.SyncPanel.btnPaste );
-        bar.SyncPanel.btnPaste.enabled=false;
+        var grpGlob_Left = grpGlob.add("group");
+        grpGlob_Left.orientation = "column";
+
+        var grpBtn1 = grpGlob_Left.add("group");
+        grpBtn1.orientation = "row";
+        btnSave = grpBtn1.add("button", undefined, "Save");
+        wrapper.fieldFilenameRefs.push(btnSave);
+        btnSave.enabled=false;
+        btnSync = grpBtn1.add("button", undefined, "Sync");
+        wrapper.fieldFilenameRefs.push(btnSync);
+        btnSync.enabled=false;
+
+        var grpBtn2 = grpGlob_Left.add("group");
+        grpBtn2.orientation = "row";
+        btnCopy = grpBtn2.add("button", undefined, "Copy");
+        wrapper.fieldFilenameRefs.push(btnCopy);
+        btnCopy .enabled=false;
+        btnPaste = grpBtn2.add("button", undefined, "Paste");
+        wrapper.fieldFilenameRefs.push(btnPaste);
+        btnPaste.enabled=false;
+
+        var grpGlob_Right = grpGlob.add("group");
+        grpGlob_Right.alignment = ["right", "top"];
+        grpGlob_Right.orientation = "column";
+
+        var chkSortKeywords = grpGlob_Right.add( "checkbox", undefined,"Sort keywords");
+        wrapper.chkSortBox.push(chkSortKeywords);
+        chkSortKeywords.alignment = ["left", "top"];
+        chkSortKeywords.enabled = true;
+        chkSortKeywords.value= true;
 
 
-        bar.SyncPanel.btnSave.onClick = function()
+        btnSave.onClick = function()
         {
             if ( app.document.selections.length == 1 )
             {
@@ -298,7 +371,7 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
             }
         }
 
-        bar.SyncPanel.btnSync.onClick = function()
+        btnSync.onClick = function()
         {
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
                 alert("Please select checkbox");
@@ -310,27 +383,23 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
             }
         }
 
-        bar.SyncPanel.btnCopy.onClick = function()
+        btnCopy.onClick = function()
         {
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
                 alert("Please select checkbox");
             else
             {
-                //var b = (Window.confirm("Really sync matadata?")) ? true : false;
-                //if ( b ) s
                 copyClipboardMetadata(app.document.selections[0]);
                 wrapper.flags.clipEmpty = false;
             }
         }
 
-        bar.SyncPanel.btnPaste.onClick = function()
+        btnPaste.onClick = function()
         {
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
                 alert("Please select checkbox");
             else
             {
-                //var b = (Window.confirm("Really sync matadata?")) ? true : false;
-                //if ( b ) s
                 pasteClipboardMetadata( app.document.selections);
                 reselectFiles();
             }
@@ -340,9 +409,7 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
     }
 
     onThumbSelection = function( evt ) {
-            //$.writeln( evt.object.constructor.name + " call " +evt.type + " Event" );
             if ( evt.type == "selectionsChanged" ) {
-                //$.writeln( "Thumbnail Selected: " + app.document.selections[0].name );
                 if (  app.document.selections.length > 0 && app.document.selections[0].type == "file")
                 {
                     if (app.document.selections.length == 1)
@@ -354,14 +421,15 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         changeTotal( md.subject.length );
                         changeKeywords(  md.subject ? md.subject.join(", ") : "" );
                         changeTitle( md.title ? md.title[0] : "");
+                        changeTotalTitle( md.title ? (md.title[0].split(" ")).length : 0 );
                         changeDescription( md.description ? md.description[0] : "");
+                        changeTotalDescr( md.description ? (md.description[0].split(" ")).length : 0 );
                         changeFilename(app.document.selections[0].name);
-                        //$.writeln("Total :  " + md.Keywords.length + ", list:" + md.Keywords );
                     }
                     else
                     {
                         var flag = true;
-                        for ( var i = 0; i < app.document.selections.length; i++ )
+                        for ( var i  =0 ; i < app.document.selections.length; i++ )
                         {
                                 if ( app.document.selections[i].name == wrapper.masterThumb[0].name ) { flag = false ; break;}
                         }
@@ -375,7 +443,9 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                             changeTotal( md.subject.length);
                             changeKeywords( md.subject ? md.subject.join(", ") : "");
                             changeTitle( md.title ? md.title[0] : "");
+                            changeTotalTitle( md.title ? (md.title[0].split(" ")).length : 0 );
                             changeDescription( md.description ? md.description[0] : "");
+                            changeTotalDescr( md.description ? (md.description[0].split(" ")).length : 0 );
                             changeFilename(app.document.selections[0].name);
                         }
                     }
@@ -388,7 +458,6 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         for (var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                         {
                             wrapper.chkSyncBox[i].enabled = true;
-                            //wrapper.chkSyncBox[i].value = false;
                         }
                     }
                     else
@@ -398,12 +467,11 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         wrapper.fieldFilenameRefs[4].enabled = false; // Paste button
                     }
 
-
                     if ( app.document.selections.length > 1 )
                     {
                         wrapper.fieldFilenameRefs[2].enabled = true; // Sync button
                         if (!wrapper.flags.clipEmpty) wrapper.fieldFilenameRefs[4].enabled = true; // Paste button
-                        for ( var i = 0; i < wrapper.chkSyncBox.length; i++)
+                        for ( var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                         {
                             wrapper.chkSyncBox[i].enabled = true;
                         }
@@ -415,10 +483,12 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                 }
                 else
                 {
-                    changeTotal( "n/a file");
+                    changeTotal( 0);
                     changeKeywords( "");
                     changeTitle( "");
+                    changeTotalTitle( 0 );
                     changeDescription("" );
+                    changeTotalDescr(  0 );
                     changeFilename( "n/a");
                     wrapper.masterThumb.length = 0;
                     wrapper.fieldFilenameRefs[1].enabled = false; // Save button
@@ -436,21 +506,41 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
 
     function addKeywordPalette(doc)
     {
-/*
-    res =
-        "
-        ";
-*/
-        // Create the TabbedPalette object, of type "script"
 
+        // Create the TabbedPalette object, of type "script"
         var keywordPalette = new TabbedPalette( doc, "Stock Palette", "KeyUIPalette", "script" );
         wrapper.paletteRefs.push(keywordPalette);
 
+        keywordPalette.content.onResize = function()
+        {
+            var b = this.bounds;
+            wrapper.paletteRefs[1].bounds = b;
+            wrapper.paletteRefs[1].layout.resize(true);
+            wrapper.paletteRefs[1].layout.layout(true);
+            this.layout.resize(true);
+            wrapper.paletteRefs[0].content.layout.layout(true);
+
+        }
+
+        var pnl = keywordPalette.content.add("panel", undefined , "");
+        keywordPalette.margins=5;
+        keywordPalette.spacing=5;
+        wrapper.paletteRefs.push(pnl);
+        pnl.alignment = ["fill", "fill"];
+
+        var mainBtnGp = pnl.add("group");
+        mainBtnGp.orientation = "column";
+        mainBtnGp.alignment = ["fill", "fill"];
+        mainBtnGp.alignChildren = ["fill", "fill"];
+
         // Create a ScriptUI panel to be displayed as the tab contents.
-        addTitlePanel(keywordPalette.content);
-        addDescrPanel(keywordPalette.content);
-        addKeywordsPanel(keywordPalette.content);
-        addSyncPanel(keywordPalette.content);
+        addTitlePanel(mainBtnGp);
+        addDescrPanel(mainBtnGp);
+        addKeywordsPanel(mainBtnGp);
+        addSyncPanel(mainBtnGp);
+
+        keywordPalette.content.layout.layout(true);
+        keywordPalette.content.layout.resize(true);
         //var tbPanel = keywordPalette.content.add('panel', [25,15,255,130], 'The Panel');
 
     }
@@ -465,6 +555,7 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
             }
         }
     }
+
     // Add the palette to all open Bridge browser windows
     if ($.level == 0 )
     {
