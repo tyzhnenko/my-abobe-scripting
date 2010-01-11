@@ -1,9 +1,9 @@
 ///////////////////
 /// Name: Keyword counter
-/// Description: This script show tatal keywords in file
+/// Description: This script show tatal keywords in file and have many use for for microstocker fuctional.
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.65
+/// Version: 0.66
 ///////////////////
 /*
     Copyright (C) 2009-2010  Tyzhnenko Dmitry
@@ -23,6 +23,8 @@
 */
 /*
     Changelog
+    0.66
+     - count chars end words for title and descr (fix issue #9)
     0.65
      - change to dynamic layout
      - show count words in title and descr
@@ -72,7 +74,7 @@ function KeywordCounter()
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
     //$.level = 5; // Debugging level
 
-    this.version = "0.65";
+    this.version = "0.66";
     this.author = "Tyzhenenko Dmitry";
 }
 
@@ -302,8 +304,7 @@ KeywordCounter.prototype.run = function()
     function pasteClipboardMetadata( thumbsList)
     {
         if (!wrapper.flags.clipEmpty)
-            syncMetadata(wrapper.clipboardMaster[0],thumbsList, { title:wrapper.chkSyncBox[0].value, 
-descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
+            syncMetadata(wrapper.clipboardMaster[0],thumbsList, { title:wrapper.chkSyncBox[0].value, descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
         else
             alert("nothing in clip");
     }
@@ -437,9 +438,9 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         changeTotal( md.subject.length );
                         changeKeywords(  md.subject ? md.subject.join(", ") : "" );
                         changeTitle( md.title ? md.title[0] : "");
-                        changeTotalTitle( md.title ? (md.title[0].split(" ")).length : 0 );
+                        changeTotalTitle( md.title ? "w:"+(md.title[0].split(" ")).length +"/c:"+ md.title[0].length : "w:0/c:0" );
                         changeDescription( md.description ? md.description[0] : "");
-                        changeTotalDescr( md.description ? (md.description[0].split(" ")).length : 0 );
+                        changeTotalDescr( md.description ? "w:"+(md.description[0].split(" ")).length +"/c:"+md.description[0].length : "w:0/c:0" );
                         changeFilename(app.document.selections[0].name);
                     }
                     else
@@ -459,9 +460,9 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                             changeTotal( md.subject.length);
                             changeKeywords( md.subject ? md.subject.join(", ") : "");
                             changeTitle( md.title ? md.title[0] : "");
-                            changeTotalTitle( md.title ? (md.title[0].split(" ")).length : 0 );
+                            changeTotalTitle( md.title ? "w:"+(md.title[0].split(" ")).length +"/c:"+ md.title[0].length : "w:0/c:0" );
                             changeDescription( md.description ? md.description[0] : "");
-                            changeTotalDescr( md.description ? (md.description[0].split(" ")).length : 0 );
+                            changeTotalDescr( md.description ? "w:"+(md.description[0].split(" ")).length +"/c:"+md.description[0].length : "w:0/c:0" );
                             changeFilename(app.document.selections[0].name);
                         }
                     }
@@ -557,7 +558,6 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
 
         keywordPalette.content.layout.layout(true);
         keywordPalette.content.layout.resize(true);
-        //var tbPanel = keywordPalette.content.add('panel', [25,15,255,130], 'The Panel');
 
     }
 
