@@ -3,7 +3,7 @@
 /// Description: This script show tatal keywords in file and have many use for for microstocker fuctional.
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.66
+/// Version: 0.7
 ///////////////////
 /*
     Copyright (C) 2009-2010  Tyzhnenko Dmitry
@@ -23,6 +23,10 @@
 */
 /*
     Changelog
+    0.7
+     - change template `w:0/c:0` to `words: 0 | chars: 0` (issue #12)
+     - add checkbox `add keywors` -- add functionality append exist keywords (issue #16)
+     - add live counting words and chars (issue #13)
     0.66
      - count chars end words for title and descr (fix issue #9)
     0.65
@@ -55,8 +59,8 @@
 */
 /*
     TODO:
-      3. с цветами - не знаю как у Вас но у меня в бридже все черное а это окошко светло серое - было бы здорого сделать его одного 
-цвета - как все плагины
+      3. с цветами - не знаю как у Вас но у меня в бридже все черное а это окошко светло серое - было бы здорого сделать его 
+одного цвета - как все плагины
     add checkbox to show copyed data
     add small thumb with master file
     save panel position
@@ -72,9 +76,9 @@ function KeywordCounter()
     @type String
     */
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
-    //$.level = 5; // Debugging level
+    //$.level = 2; // Debugging level
 
-    this.version = "0.66";
+    this.version = "0.7";
     this.author = "Tyzhenenko Dmitry";
 }
 
@@ -133,6 +137,7 @@ KeywordCounter.prototype.run = function()
     this.chkSyncBox = new Array();
     this.clipboardMaster = new Array();
     this.chkSortBox = new Array();
+    this.chkAddBox = new Array();
     this.flags = { clipEmpty:true };
     var wrapper = this;
 
@@ -181,6 +186,8 @@ KeywordCounter.prototype.run = function()
     function addTitlePanel( bar) {
 
         var TitlePanel = bar.add( "panel", undefined, 'Title', );
+        TitlePanel.margins=[2,7,2,5];
+        TitlePanel.spacing=[2,7,2,5];
         wrapper.panelTitle.push(TitlePanel);
         TitlePanel.orientation= "row";
         TitlePanel.alignment = ["fill", "top"];
@@ -188,6 +195,11 @@ KeywordCounter.prototype.run = function()
         var editTitleField = TitlePanel.add( "edittext", undefined,"");
         wrapper.editTitleRefs.push(editTitleField);
         editTitleField.alignment = ["fill", "top"];
+        editTitleField.onChanging = function()
+        {
+            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.split(" 
+")).length) +" | chars: "+ wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
+        }
 
         var chkSyncTitle = TitlePanel.add( "checkbox", undefined,"");
         wrapper.chkSyncBox.push(chkSyncTitle);
@@ -200,16 +212,24 @@ KeywordCounter.prototype.run = function()
     function addDescrPanel( bar) {
 
         var DescrPanel = bar.add( "panel", undefined, 'Description');
+        DescrPanel.margins=[2,7,2,5];
+        DescrPanel.spacing=[2,7,2,5];
         wrapper.panelDesc.push(DescrPanel);
+        DescrPanel.orientation= "row";
         DescrPanel.alignment = ["fill", "fill" ];
         DescrPanel.alignChildren = ["fill", "fill"];
-        DescrPanel.orientation= "row";
+
 
         var editDescrField = DescrPanel.add( "edittext", undefined,"",  {multiline:true});
-        editDescrField.alignment = ["fill", "fill"];
-        editDescrField.minimumSize = [100,40];
-        editDescrField.maximumSize = [4000,70];
         wrapper.editDescrRefs.push(editDescrField);
+        editDescrField.minimumSize = [100,60];
+        editDescrField.maximumSize = [4000,70];
+        editDescrField.alignment = ["fill", "fill"];
+        editDescrField.onChanging = function()
+        {
+            changeTotalDescr( wrapper.editDescrRefs[0].text.length > 0 ? "words: "+ ((wrapper.editDescrRefs[0].text.split(" 
+")).length) +" | chars: "+wrapper.editDescrRefs[0].text.length : "words: 0 | chars: 0" );
+        }
 
         var chkSyncDescr = DescrPanel.add( "checkbox", undefined,"");
         wrapper.chkSyncBox.push(chkSyncDescr);
@@ -220,33 +240,42 @@ KeywordCounter.prototype.run = function()
     function addKeywordsPanel( bar) {
 
         var KeywordsPanel = bar.add( "panel", undefined, 'Keywords');
+        KeywordsPanel.margins=[2,7,2,5];
+        KeywordsPanel.spacing=[2,7,2,5];
         wrapper.panelKeywords.push(KeywordsPanel);
-        KeywordsPanel.preferredSize = [-1,200];
-        KeywordsPanel.orientation = "column";
+        KeywordsPanel.orientation = "row";
         KeywordsPanel.alignment = ["fill", "fill"];
         KeywordsPanel.alignChildren = ["fill", "fill"];
-        KeywordsPanel.grp1  = KeywordsPanel.add( "group");
-        KeywordsPanel.grp1.orientation= "row";
-        var editKeywordsField = KeywordsPanel.grp1.add( "edittext", undefined,"",  {multiline:true});
+
+        var editKeywordsField = KeywordsPanel.add( "edittext", undefined,"",  {multiline:true});
         wrapper.editKeywordsRefs.push(editKeywordsField);
-        editKeywordsField.minimumSize = [150,40];
+        editKeywordsField.minimumSize = [150,80];
         editKeywordsField.maximumSize = [4000,250];
         editKeywordsField.alignment = ["fill", "fill"];
+        editKeywordsField.onChanging = function()
+        {
+            changeTotal( wrapper.editKeywordsRefs[0].text.length> 0 ? wrapper.editKeywordsRefs[0].text.split(",").length  : "0" 
+);
+        }
 
-        var chkSyncKeywords = KeywordsPanel.grp1.add( "checkbox", undefined,"");
+        var chkSyncKeywords = KeywordsPanel.add( "checkbox", undefined,"");
         wrapper.chkSyncBox.push(chkSyncKeywords);
         chkSyncKeywords.alignment = ["right", "top"];
         chkSyncKeywords.enabled = false;
     }
 
-    function saveMetadata( thumb, title, descr, keywords, sort)
+    function saveMetadata( thumb, title, descr, keywords, params )
     {
+        if (params.sort == null) params.sort = true;
+        if (params.append == null) params.append = true;
         if ( title != null || descr != null || keywords != null)
         {
+
             app.synchronousMode = true;
             md = thumb.metadata;
             app.synchronousMode = false;
             var xmp = new XMPMeta(md.serialize());
+            md.namespace =  "http://purl.org/dc/elements/1.1/";
 
             if (title != null) xmp.setLocalizedText(XMPConst.NS_DC,"title","","x-default", title);
             if (descr != null) xmp.setLocalizedText(XMPConst.NS_DC,"description","","x-default", descr);
@@ -256,7 +285,13 @@ KeywordCounter.prototype.run = function()
                 {
                         keywords[k] = keywords[k].trim();
                 }
-                if (sort) keywords = keywords.sort();
+                if (params.append)
+                {
+                    exist_keywords = md.subject ? md.subject : [];
+                    exist_keywords = exist_keywords.concat(keywords);
+                    keywords = exist_keywords;
+                }
+                if (params.sort) keywords = keywords.sort();
                 keywords = keywords.unique();
                 for (var k  =0 ; k < keywords.length; k++)
                 {
@@ -281,6 +316,8 @@ KeywordCounter.prototype.run = function()
         if (params.title == null) params.title = true;
         if (params.descr == null) params.descr = true;
         if (params.keywords == null) params.keywords = true;
+        if (params.sort == null) params.sort = true;
+        if (params.append == null) params.append = true;
         md = masterThumb.synchronousMetadata;
         md.namespace =  "http://purl.org/dc/elements/1.1/";
         master_title = master_descr = master_keywords = null;
@@ -289,7 +326,8 @@ KeywordCounter.prototype.run = function()
         if (params.keywords == true) master_keywords = md.subject ? md.subject : [];
         for ( var k  =0 ; k < listThumbs.length; k++)
         {
-                saveMetadata(listThumbs[k], master_title, master_descr, master_keywords);
+                saveMetadata(listThumbs[k], master_title, master_descr, master_keywords, { sort:params.sort, 
+append:params.append} );
         }
     }
 
@@ -304,7 +342,12 @@ KeywordCounter.prototype.run = function()
     function pasteClipboardMetadata( thumbsList)
     {
         if (!wrapper.flags.clipEmpty)
-            syncMetadata(wrapper.clipboardMaster[0],thumbsList, { title:wrapper.chkSyncBox[0].value, descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value } );
+            syncMetadata(wrapper.clipboardMaster[0], thumbsList,
+                        { title:wrapper.chkSyncBox[0].value,
+                            descr:wrapper.chkSyncBox[1].value,
+                            keywords:wrapper.chkSyncBox[2].value,
+                            sort:wrapper.chkSortBox[0].value,
+                            append:wrapper.chkAddBox[0].value} );
         else
             alert("nothing in clip");
     }
@@ -317,10 +360,9 @@ KeywordCounter.prototype.run = function()
     }
 
     function addSyncPanel( bar) {
-
         var SyncPanel = bar.add( "panel", undefined, '');
-        SyncPanel.margins=5;
-        SyncPanel.spacing=5;
+        SyncPanel.margins=[2,7,2,5];
+        SyncPanel.spacing=[2,7,2,5];
         SyncPanel.maximumSize = [3000,100];
         SyncPanel.alignment = ["fill", "fill"];
         SyncPanel.alignChildren = ["fill", "fill"];
@@ -360,9 +402,15 @@ KeywordCounter.prototype.run = function()
 
         var chkSortKeywords = grpGlob_Right.add( "checkbox", undefined,"Sort keywords");
         wrapper.chkSortBox.push(chkSortKeywords);
-        chkSortKeywords.alignment = ["left", "top"];
+        chkSortKeywords.alignment = ["right", "top"];
         chkSortKeywords.enabled = true;
         chkSortKeywords.value= true;
+
+        var chkAddKeywords = grpGlob_Right.add( "checkbox", undefined,"Add keywords");
+        wrapper.chkAddBox.push(chkAddKeywords);
+        chkAddKeywords.alignment = ["right", "top"];
+        chkAddKeywords.enabled = true;
+        chkAddKeywords.value= false;
 
 
         btnSave.onClick = function()
@@ -379,8 +427,13 @@ KeywordCounter.prototype.run = function()
                 {
                         new_keywords[k] = new_keywords[k].trim();
                 }
-                saveMetadata(app.document.selections[0], new_title, new_descr, new_keywords,  wrapper.chkSortBox[0].value);
-                reselectFiles()
+                saveMetadata(app.document.selections[0],
+                                    new_title,
+                                    new_descr,
+                                    new_keywords,
+                                    { sort:wrapper.chkSortBox[0].value,
+                                    append:false } );
+                reselectFiles();
             }
             else
             {
@@ -394,8 +447,12 @@ KeywordCounter.prototype.run = function()
                 alert("Please select checkbox");
             else
             {
-                syncMetadata(wrapper.masterThumb[0], app.document.selections, { title:wrapper.chkSyncBox[0].value, 
-descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
+                syncMetadata(wrapper.masterThumb[0], app.document.selections,
+                        { title:wrapper.chkSyncBox[0].value,
+                            descr:wrapper.chkSyncBox[1].value,
+                            keywords:wrapper.chkSyncBox[2].value,
+                            sort:wrapper.chkSortBox[0].value,
+                            append:wrapper.chkAddBox[0].value})
                 reselectFiles();
             }
         }
@@ -438,10 +495,13 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                         changeTotal( md.subject.length );
                         changeKeywords(  md.subject ? md.subject.join(", ") : "" );
                         changeTitle( md.title ? md.title[0] : "");
-                        changeTotalTitle( md.title ? "w:"+(md.title[0].split(" ")).length +"/c:"+ md.title[0].length : "w:0/c:0" );
+                        changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ md.title[0].length 
+: "words: 0 | chars: 0" );
                         changeDescription( md.description ? md.description[0] : "");
-                        changeTotalDescr( md.description ? "w:"+(md.description[0].split(" ")).length +"/c:"+md.description[0].length : "w:0/c:0" );
+                        changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: 
+"+md.description[0].length : "words: 0 | chars: 0" );
                         changeFilename(app.document.selections[0].name);
+                        //$.writeln("Total :  " + md.Keywords.length + ", list:" + md.Keywords );
                     }
                     else
                     {
@@ -460,9 +520,11 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
                             changeTotal( md.subject.length);
                             changeKeywords( md.subject ? md.subject.join(", ") : "");
                             changeTitle( md.title ? md.title[0] : "");
-                            changeTotalTitle( md.title ? "w:"+(md.title[0].split(" ")).length +"/c:"+ md.title[0].length : "w:0/c:0" );
+                            changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ 
+md.title[0].length : "words: 0 | chars: 0" );
                             changeDescription( md.description ? md.description[0] : "");
-                            changeTotalDescr( md.description ? "w:"+(md.description[0].split(" ")).length +"/c:"+md.description[0].length : "w:0/c:0" );
+                            changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: 
+"+md.description[0].length : "words: 0 | chars: 0" );
                             changeFilename(app.document.selections[0].name);
                         }
                     }
@@ -547,6 +609,8 @@ descr:wrapper.chkSyncBox[1].value, keywords:wrapper.chkSyncBox[2].value})
 
         var mainBtnGp = pnl.add("group");
         mainBtnGp.orientation = "column";
+        mainBtnGp.margins=5;
+        mainBtnGp.spacing=5;
         mainBtnGp.alignment = ["fill", "fill"];
         mainBtnGp.alignChildren = ["fill", "fill"];
 
