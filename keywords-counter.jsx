@@ -502,8 +502,7 @@ KeywordCounter.prototype.run = function()
                         changeTotal( md.subject.length );
                         changeKeywords(  md.subject ? md.subject.join(", ") : "" );
                         changeTitle( md.title ? md.title[0] : "");
-                        changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" 
-);
+                        changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
                         changeDescription( md.description ? md.description[0] : "");
                         changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
                         changeFilename(app.document.selections[0].name);
@@ -525,8 +524,7 @@ KeywordCounter.prototype.run = function()
                             changeTotal( md.subject.length);
                             changeKeywords( md.subject ? md.subject.join(", ") : "");
                             changeTitle( md.title ? md.title[0] : "");
-                            changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 
-0" );
+                            changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
                             changeDescription( md.description ? md.description[0] : "");
                             changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
                             changeFilename(app.document.selections[0].name);
