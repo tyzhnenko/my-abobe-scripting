@@ -197,8 +197,7 @@ KeywordCounter.prototype.run = function()
         editTitleField.alignment = ["fill", "top"];
         editTitleField.onChanging = function()
         {
-            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.split(" 
-")).length) +" | chars: "+ wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
+            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.split(" ")).length) +" | chars: "+ wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
         }
 
         var chkSyncTitle = TitlePanel.add( "checkbox", undefined,"");
@@ -227,8 +226,7 @@ KeywordCounter.prototype.run = function()
         editDescrField.alignment = ["fill", "fill"];
         editDescrField.onChanging = function()
         {
-            changeTotalDescr( wrapper.editDescrRefs[0].text.length > 0 ? "words: "+ ((wrapper.editDescrRefs[0].text.split(" 
-")).length) +" | chars: "+wrapper.editDescrRefs[0].text.length : "words: 0 | chars: 0" );
+            changeTotalDescr( wrapper.editDescrRefs[0].text.length > 0 ? "words: "+ ((wrapper.editDescrRefs[0].text.split(" ")).length) +" | chars: "+wrapper.editDescrRefs[0].text.length : "words: 0 | chars: 0" );
         }
 
         var chkSyncDescr = DescrPanel.add( "checkbox", undefined,"");
@@ -254,8 +252,7 @@ KeywordCounter.prototype.run = function()
         editKeywordsField.alignment = ["fill", "fill"];
         editKeywordsField.onChanging = function()
         {
-            changeTotal( wrapper.editKeywordsRefs[0].text.length> 0 ? wrapper.editKeywordsRefs[0].text.split(",").length  : "0" 
-);
+            changeTotal( wrapper.editKeywordsRefs[0].text.length> 0 ? wrapper.editKeywordsRefs[0].text.split(",").length  : "0" );
         }
 
         var chkSyncKeywords = KeywordsPanel.add( "checkbox", undefined,"");
@@ -326,8 +323,7 @@ KeywordCounter.prototype.run = function()
         if (params.keywords == true) master_keywords = md.subject ? md.subject : [];
         for ( var k  =0 ; k < listThumbs.length; k++)
         {
-                saveMetadata(listThumbs[k], master_title, master_descr, master_keywords, { sort:params.sort, 
-append:params.append} );
+                saveMetadata(listThumbs[k], master_title, master_descr, master_keywords, { sort:params.sort, append:params.append} );
         }
     }
 
@@ -495,11 +491,9 @@ append:params.append} );
                         changeTotal( md.subject.length );
                         changeKeywords(  md.subject ? md.subject.join(", ") : "" );
                         changeTitle( md.title ? md.title[0] : "");
-                        changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ md.title[0].length 
-: "words: 0 | chars: 0" );
+                        changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
                         changeDescription( md.description ? md.description[0] : "");
-                        changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: 
-"+md.description[0].length : "words: 0 | chars: 0" );
+                        changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
                         changeFilename(app.document.selections[0].name);
                         //$.writeln("Total :  " + md.Keywords.length + ", list:" + md.Keywords );
                     }
@@ -520,11 +514,9 @@ append:params.append} );
                             changeTotal( md.subject.length);
                             changeKeywords( md.subject ? md.subject.join(", ") : "");
                             changeTitle( md.title ? md.title[0] : "");
-                            changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ 
-md.title[0].length : "words: 0 | chars: 0" );
+                            changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
                             changeDescription( md.description ? md.description[0] : "");
-                            changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: 
-"+md.description[0].length : "words: 0 | chars: 0" );
+                            changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
                             changeFilename(app.document.selections[0].name);
                         }
                     }
