@@ -3,7 +3,7 @@
 /// Description: This script show tatal keywords in file and have many use for for microstocker fuctional.
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.7
+/// Version: 0.71
 ///////////////////
 /*
     Copyright (C) 2009-2010  Tyzhnenko Dmitry
@@ -23,10 +23,14 @@
 */
 /*
     Changelog
+    0.71
+     - regexp in split for words count
+     - remove duplicate spaces
+     - trim title and descr
     0.7
-     - change template `w:0/c:0` to `words: 0 | chars: 0` (issue #12)
-     - add checkbox `add keywors` -- add functionality append exist keywords (issue #16)
-     - add live counting words and chars (issue #13)
+     - change template `w:0/c:0` to `words: 0 | chars: 0` (fix issue #12)
+     - add checkbox `add keywors` -- add functionality append exist keywords (fix issue #16)
+     - add live counting words and chars (fix issue #13)
     0.66
      - count chars end words for title and descr (fix issue #9)
     0.65
@@ -59,8 +63,7 @@
 */
 /*
     TODO:
-      3. с цветами - не знаю как у Вас но у меня в бридже все черное а это окошко светло серое - было бы здорого сделать его 
-одного цвета - как все плагины
+    3. с цветами - не знаю как у Вас но у меня в бридже все черное а это окошко светло серое - было бы здорого сделать его одного цвета - как все плагины
     add checkbox to show copyed data
     add small thumb with master file
     save panel position
@@ -78,7 +81,7 @@ function KeywordCounter()
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
     //$.level = 2; // Debugging level
 
-    this.version = "0.7";
+    this.version = "0.71";
     this.author = "Tyzhenenko Dmitry";
 }
 
@@ -92,6 +95,10 @@ KeywordCounter.prototype.run = function()
 
     String.prototype.trim = function () {
         return this.replace(/^\s*/, "").replace(/\s*$/, "");
+    }
+
+    String.prototype.remdupspace = function () {
+        return this.replace(/\s+/g, " ");
     }
 
     Array.prototype.unique = function () {
@@ -197,7 +204,7 @@ KeywordCounter.prototype.run = function()
         editTitleField.alignment = ["fill", "top"];
         editTitleField.onChanging = function()
         {
-            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.split(" ")).length) +" | chars: "+ wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
+            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.trim().split(/\s+/)).length) +" | chars: "+wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
         }
 
         var chkSyncTitle = TitlePanel.add( "checkbox", undefined,"");
@@ -226,7 +233,7 @@ KeywordCounter.prototype.run = function()
         editDescrField.alignment = ["fill", "fill"];
         editDescrField.onChanging = function()
         {
-            changeTotalDescr( wrapper.editDescrRefs[0].text.length > 0 ? "words: "+ ((wrapper.editDescrRefs[0].text.split(" ")).length) +" | chars: "+wrapper.editDescrRefs[0].text.length : "words: 0 | chars: 0" );
+            changeTotalDescr( wrapper.editDescrRefs[0].text.length > 0 ? "words: "+ ((wrapper.editDescrRefs[0].text.trim().split(/\s+/)).length) +" | chars: "+wrapper.editDescrRefs[0].text.length : "words: 0 | chars: 0" );
         }
 
         var chkSyncDescr = DescrPanel.add( "checkbox", undefined,"");
@@ -273,6 +280,10 @@ KeywordCounter.prototype.run = function()
             app.synchronousMode = false;
             var xmp = new XMPMeta(md.serialize());
             md.namespace =  "http://purl.org/dc/elements/1.1/";
+            title = title.trim();
+            title = title.remdupspace();
+            descr = descr.trim();
+            descr = descr.remdupspace();
 
             if (title != null) xmp.setLocalizedText(XMPConst.NS_DC,"title","","x-default", title);
             if (descr != null) xmp.setLocalizedText(XMPConst.NS_DC,"description","","x-default", descr);
@@ -491,11 +502,11 @@ KeywordCounter.prototype.run = function()
                         changeTotal( md.subject.length );
                         changeKeywords(  md.subject ? md.subject.join(", ") : "" );
                         changeTitle( md.title ? md.title[0] : "");
-                        changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
+                        changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" 
+);
                         changeDescription( md.description ? md.description[0] : "");
-                        changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
+                        changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
                         changeFilename(app.document.selections[0].name);
-                        //$.writeln("Total :  " + md.Keywords.length + ", list:" + md.Keywords );
                     }
                     else
                     {
@@ -514,9 +525,10 @@ KeywordCounter.prototype.run = function()
                             changeTotal( md.subject.length);
                             changeKeywords( md.subject ? md.subject.join(", ") : "");
                             changeTitle( md.title ? md.title[0] : "");
-                            changeTotalTitle( md.title ? "words: "+(md.title[0].split(" ")).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
+                            changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 
+0" );
                             changeDescription( md.description ? md.description[0] : "");
-                            changeTotalDescr( md.description ? "words: "+(md.description[0].split(" ")).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
+                            changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
                             changeFilename(app.document.selections[0].name);
                         }
                     }
@@ -620,8 +632,6 @@ KeywordCounter.prototype.run = function()
     onDocCreate = function( evt ) {
         if( evt.object.constructor.name == "Document" ){
             if( evt.type == "create" ) {
-                // Action to take on document creation
-                //addNavBar( evt.object );
                 addKeywordPalette(app.document);
                 app.eventHandlers.push( { handler: onThumbSelection} );
             }
