@@ -3,7 +3,7 @@
 /// Description: This script show tatal keywords in file and have many use for for microstocker fuctional.
 /// Author: Tyzhnenko Dmitry
 /// E-mail: t.dmitry@gmail.com
-/// Version: 0.71
+/// Version: 0.72
 ///////////////////
 /*
     Copyright (C) 2009-2010  Tyzhnenko Dmitry
@@ -23,6 +23,8 @@
 */
 /*
     Changelog
+    0.72
+     - fix sync with empty title and/or descr (fixes Issue #18)
     0.71
      - regexp in split for words count
      - remove duplicate spaces
@@ -81,7 +83,7 @@ function KeywordCounter()
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
     //$.level = 2; // Debugging level
 
-    this.version = "0.71";
+    this.version = "0.72";
     this.author = "Tyzhenenko Dmitry";
 }
 
@@ -280,13 +282,19 @@ KeywordCounter.prototype.run = function()
             app.synchronousMode = false;
             var xmp = new XMPMeta(md.serialize());
             md.namespace =  "http://purl.org/dc/elements/1.1/";
-            title = title.trim();
-            title = title.remdupspace();
-            descr = descr.trim();
-            descr = descr.remdupspace();
 
-            if (title != null) xmp.setLocalizedText(XMPConst.NS_DC,"title","","x-default", title);
-            if (descr != null) xmp.setLocalizedText(XMPConst.NS_DC,"description","","x-default", descr);
+            if (title != null)
+            {
+                title = title.trim();
+                title = title.remdupspace();
+                xmp.setLocalizedText(XMPConst.NS_DC,"title","","x-default", title);
+            }
+            if (descr != null) 
+            {
+                descr = descr.trim();
+                descr = descr.remdupspace();
+                xmp.setLocalizedText(XMPConst.NS_DC,"description","","x-default", descr);
+            }
             if (keywords != null)
             {
                 for (var k  =0 ; k < keywords.length; k++)
