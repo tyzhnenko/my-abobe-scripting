@@ -1,10 +1,22 @@
-﻿/////////////////// 
-/// Name: Auto stacking files 
-/// Description: This script enable auto stacking files by name 
-/// Author: Tyzhnenko Dmitry 
-/// E-mail: t.dmitry@gmail.com 
-/// Version: 0.35
-/////////////////// 
+﻿/*
+.--------------------------------------------------------------------------.
+|    Software: Auto stacking files                                         |
+|     Version: 0.35                                                        |
+|        Site: http://code.google.com/p/my-abobe-scripting/                |
+| Description: This script enable auto stacking files by name              |
+| -------------------------------------------------------------------------|
+|     Admin: Tyzhnenko Dmitry (project admininistrator)                    |
+|   Authors: Tyzhnenko Dmitry t.dmitry@gmail.com                           |
+|   Founder: Tyzhnenko Dmitry  (original founder)                          |
+| Copyright (c) 2009-2011, Tyzhnenko Dmitry                                |
+| -------------------------------------------------------------------------|
+|   License: Distributed under the General Public License v3 (GPLv3)       |
+|            http://www.gnu.org/licenses/gpl.html                          |
+| This program is distributed in the hope that it will be useful - WITHOUT |
+| ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or    |
+| FITNESS FOR A PARTICULAR PURPOSE.                                        |
+'--------------------------------------------------------------------------'
+*/
 
 /* 
 @@@START_XML@@@ 
