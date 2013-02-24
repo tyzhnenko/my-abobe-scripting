@@ -1,15 +1,15 @@
 /*
 .--------------------------------------------------------------------------.
 |    Software: Keyword counter                                             |
-|     Version: 0.72                                                        |
+|     Version: 0.73                                                        |
 |        Site: http://code.google.com/p/my-abobe-scripting/                |
-| Description: This script show tatal keywords in file and have            |
+| Description: This script show total keywords in file and have            |
 |                               many use for for microstocker fuctional.   |
 | -------------------------------------------------------------------------|
 |     Admin: Tyzhnenko Dmitry (project admininistrator)                    |
 |    Author: Tyzhnenko Dmitry t.dmitry@gmail.com                           |
 |   Founder: Tyzhnenko Dmitry (original founder)                           |
-| Copyright (c) 2009-2011, Tyzhnenko Dmitry                                |
+| Copyright (c) 2009-2013, Tyzhnenko Dmitry                                |
 | -------------------------------------------------------------------------|
 |   License: Distributed under the General Public License v3 (GPLv3)       |
 |            http://www.gnu.org/licenses/gpl.html                          |
@@ -20,6 +20,8 @@
 */
 /*
     Changelog
+    0.73
+     - fix error if selection no have metadata (fixes Issue #24)
     0.72
      - fix sync with empty title and/or descr (fixes Issue #18)
     0.71
@@ -38,7 +40,7 @@
     0.61
      - add checkbox for sort/unsort keywords
      - add unique keywords function
-     - fix "for" statements for array
+     - fix "for" statements for array 
     0.6
      - add copy-paste
      - remember checkboxes
@@ -65,32 +67,32 @@
     3. с цветами - не знаю как у Вас но у меня в бридже все черное а это окошко светло серое - было бы здорого сделать его одного цвета - как все плагины
     add checkbox to show copyed data
     add small thumb with master file
-    save panel position
-
+    save panel position 
+    
 */
 
 
 
-function KeywordCounter()
-{
-    /**
-    The context in which this snippet can run; Bridge must be running.
-    @type String
-    */
-    this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n";
-    //$.level = 2; // Debugging level
+function KeywordCounter() 
+{ 
+    /** 
+    The context in which this snippet can run; Bridge must be running. 
+    @type String 
+    */ 
+    this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n"; 
+    $.level = 2; // Debugging level 
 
-    this.version = "0.72";
+    this.version = "0.73";
     this.author = "Tyzhenenko Dmitry";
-}
-
-KeywordCounter.prototype.run = function()
-{
-    var retval = true;
+} 
+    
+KeywordCounter.prototype.run = function() 
+{ 
+    var retval = true; 
     if(!this.canRun()) {
-        retval = false;
-        return retval;
-    }
+        retval = false; 
+        return retval; 
+    } 
 
     String.prototype.trim = function () {
         return this.replace(/^\s*/, "").replace(/\s*$/, "");
@@ -115,17 +117,17 @@ KeywordCounter.prototype.run = function()
         return r;
     }
 
-    if( xmpLib == undefined )
+    if( xmpLib == undefined ) 
     {
         if( Folder.fs == "Windows" )
         {
             var pathToLib = Folder.startup.fsName + "/AdobeXMPScript.dll";
-        }
-        else
+        } 
+        else 
         {
             var pathToLib = Folder.startup.fsName + "/AdobeXMPScript.framework";
         }
-
+    
         var libfile = new File( pathToLib );
         var xmpLib = new ExternalObject("lib:" + pathToLib );
     }
@@ -144,15 +146,17 @@ KeywordCounter.prototype.run = function()
     this.clipboardMaster = new Array();
     this.chkSortBox = new Array();
     this.chkAddBox = new Array();
+    this.chkCloneTitleBox = new Array();
+    this.chkCloneDescrBox = new Array();
     this.flags = { clipEmpty:true };
     var wrapper = this;
-
+    
     function changeTotal( str)
     {
         field = wrapper.panelKeywords[0];
         field.text = "Keywords (" + str + ")";
     }
-
+    
     function changeTotalDescr( str)
     {
         field = wrapper.panelDesc[0];
@@ -164,7 +168,7 @@ KeywordCounter.prototype.run = function()
         field = wrapper.panelTitle[0];
         field.text = "Title (" + str + ")";
     }
-
+    
     function changeKeywords( str)
     {
         keywords = wrapper.editKeywordsRefs[0];
@@ -203,19 +207,19 @@ KeywordCounter.prototype.run = function()
         editTitleField.alignment = ["fill", "top"];
         editTitleField.onChanging = function()
         {
-            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.trim().split(/\s+/)).length) +" | chars: "+wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
+            changeTotalTitle( wrapper.editTitleRefs[0].text.length>0 ? "words: "+ ((wrapper.editTitleRefs[0].text.trim().split(/\s+/)).length) +" | chars: "+ wrapper.editTitleRefs[0].text.length : "words: 0 | chars: 0" );
         }
 
         var chkSyncTitle = TitlePanel.add( "checkbox", undefined,"");
         wrapper.chkSyncBox.push(chkSyncTitle);
         chkSyncTitle.alignment = ["right", "top"];
-        chkSyncTitle.enabled = false;
-
+        chkSyncTitle.enabled = false;       
+        
 
     }
 
     function addDescrPanel( bar) {
-
+    
         var DescrPanel = bar.add( "panel", undefined, 'Description');
         DescrPanel.margins=[2,7,2,5];
         DescrPanel.spacing=[2,7,2,5];
@@ -223,7 +227,7 @@ KeywordCounter.prototype.run = function()
         DescrPanel.orientation= "row";
         DescrPanel.alignment = ["fill", "fill" ];
         DescrPanel.alignChildren = ["fill", "fill"];
-
+        
 
         var editDescrField = DescrPanel.add( "edittext", undefined,"",  {multiline:true});
         wrapper.editDescrRefs.push(editDescrField);
@@ -234,7 +238,7 @@ KeywordCounter.prototype.run = function()
         {
             changeTotalDescr( wrapper.editDescrRefs[0].text.length > 0 ? "words: "+ ((wrapper.editDescrRefs[0].text.trim().split(/\s+/)).length) +" | chars: "+wrapper.editDescrRefs[0].text.length : "words: 0 | chars: 0" );
         }
-
+        
         var chkSyncDescr = DescrPanel.add( "checkbox", undefined,"");
         wrapper.chkSyncBox.push(chkSyncDescr);
         chkSyncDescr.alignment = ["right", "top"];
@@ -248,9 +252,9 @@ KeywordCounter.prototype.run = function()
         KeywordsPanel.spacing=[2,7,2,5];
         wrapper.panelKeywords.push(KeywordsPanel);
         KeywordsPanel.orientation = "row";
-        KeywordsPanel.alignment = ["fill", "fill"];
+        KeywordsPanel.alignment = ["fill", "fill"]; 
         KeywordsPanel.alignChildren = ["fill", "fill"];
-
+        
         var editKeywordsField = KeywordsPanel.add( "edittext", undefined,"",  {multiline:true});
         wrapper.editKeywordsRefs.push(editKeywordsField);
         editKeywordsField.minimumSize = [150,80];
@@ -260,11 +264,11 @@ KeywordCounter.prototype.run = function()
         {
             changeTotal( wrapper.editKeywordsRefs[0].text.length> 0 ? wrapper.editKeywordsRefs[0].text.split(",").length  : "0" );
         }
-
+        
         var chkSyncKeywords = KeywordsPanel.add( "checkbox", undefined,"");
         wrapper.chkSyncBox.push(chkSyncKeywords);
         chkSyncKeywords.alignment = ["right", "top"];
-        chkSyncKeywords.enabled = false;
+        chkSyncKeywords.enabled = false;                        
     }
 
     function saveMetadata( thumb, title, descr, keywords, params )
@@ -273,21 +277,20 @@ KeywordCounter.prototype.run = function()
         if (params.append == null) params.append = true;
         if ( title != null || descr != null || keywords != null)
         {
-
+            
             app.synchronousMode = true;
             md = thumb.metadata;
             app.synchronousMode = false;
             var xmp = new XMPMeta(md.serialize());
             md.namespace =  "http://purl.org/dc/elements/1.1/";
 
-            if (title != null)
-            {
-                title = title.trim();
-                title = title.remdupspace();
-                xmp.setLocalizedText(XMPConst.NS_DC,"title","","x-default", title);
+            if (title != null) 
+            { 
+                title = title.trim(); 
+                title = title.remdupspace(); 
+                xmp.setLocalizedText(XMPConst.NS_DC,"title","","x-default", title); 
             }
-            if (descr != null) 
-            {
+            if (descr != null) {
                 descr = descr.trim();
                 descr = descr.remdupspace();
                 xmp.setLocalizedText(XMPConst.NS_DC,"description","","x-default", descr);
@@ -298,7 +301,7 @@ KeywordCounter.prototype.run = function()
                 {
                         keywords[k] = keywords[k].trim();
                 }
-                if (params.append)
+                if (params.append) 
                 {
                     exist_keywords = md.subject ? md.subject : [];
                     exist_keywords = exist_keywords.concat(keywords);
@@ -336,6 +339,8 @@ KeywordCounter.prototype.run = function()
         master_title = master_descr = master_keywords = null;
         if (params.title == true) master_title = md.title[0] ? md.title[0] : "";
         if (params.descr == true) master_descr = md.description[0] ? md.description[0] : "";
+        if (params.titletodescr == true) master_descr = master_title;
+        if (params.descrtotitle == true) master_title = master_descr;
         if (params.keywords == true) master_keywords = md.subject ? md.subject : [];
         for ( var k  =0 ; k < listThumbs.length; k++)
         {
@@ -346,7 +351,7 @@ KeywordCounter.prototype.run = function()
     function copyClipboardMetadata( thumb)
     {
         wrapper.clipboardMaster.length = 0;
-
+        
         wrapper.clipboardMaster.push( thumb)
         wrapper.flags.clipEmpty = false;
     }
@@ -354,14 +359,16 @@ KeywordCounter.prototype.run = function()
     function pasteClipboardMetadata( thumbsList)
     {
         if (!wrapper.flags.clipEmpty)
-            syncMetadata(wrapper.clipboardMaster[0], thumbsList,
-                        { title:wrapper.chkSyncBox[0].value,
-                            descr:wrapper.chkSyncBox[1].value,
+            syncMetadata(wrapper.clipboardMaster[0], thumbsList, 
+                        { title:wrapper.chkSyncBox[0].value, 
+                            descr:wrapper.chkSyncBox[1].value, 
                             keywords:wrapper.chkSyncBox[2].value,
                             sort:wrapper.chkSortBox[0].value,
-                            append:wrapper.chkAddBox[0].value} );
-        else
-            alert("nothing in clip");
+                            append:wrapper.chkAddBox[0].value,
+                            titletodescr:wrapper.chkCloneTitleBox[0].value, 
+                            descrtotitle:wrapper.chkCloneDescrBox[0].value });
+        else                                             
+            alert("nothing in clip");            
     }
 
     function reselectFiles()
@@ -375,21 +382,21 @@ KeywordCounter.prototype.run = function()
         var SyncPanel = bar.add( "panel", undefined, '');
         SyncPanel.margins=[2,7,2,5];
         SyncPanel.spacing=[2,7,2,5];
-        SyncPanel.maximumSize = [3000,100];
-        SyncPanel.alignment = ["fill", "fill"];
+        SyncPanel.maximumSize = [3000,125];
+        SyncPanel.alignment = ["fill", "fill"]; 
         SyncPanel.alignChildren = ["fill", "fill"];
         SyncPanel.orientation = "column";
         var staticFile = SyncPanel.add( "statictext", undefined, 'File : n/a');
         wrapper.fieldFilenameRefs.push(staticFile);
         staticFile.minimumSize = [100, 15];
         staticFile.alignment = ["fill", "top"];
-
+        
         var grpGlob = SyncPanel.add("group");
         grpGlob.orientation = "row";
-
+        
         var grpGlob_Left = grpGlob.add("group");
         grpGlob_Left.orientation = "column";
-
+        
         var grpBtn1 = grpGlob_Left.add("group");
         grpBtn1.orientation = "row";
         btnSave = grpBtn1.add("button", undefined, "Save");
@@ -398,7 +405,7 @@ KeywordCounter.prototype.run = function()
         btnSync = grpBtn1.add("button", undefined, "Sync");
         wrapper.fieldFilenameRefs.push(btnSync);
         btnSync.enabled=false;
-
+        
         var grpBtn2 = grpGlob_Left.add("group");
         grpBtn2.orientation = "row";
         btnCopy = grpBtn2.add("button", undefined, "Copy");
@@ -407,7 +414,7 @@ KeywordCounter.prototype.run = function()
         btnPaste = grpBtn2.add("button", undefined, "Paste");
         wrapper.fieldFilenameRefs.push(btnPaste);
         btnPaste.enabled=false;
-
+        
         var grpGlob_Right = grpGlob.add("group");
         grpGlob_Right.alignment = ["right", "top"];
         grpGlob_Right.orientation = "column";
@@ -415,60 +422,95 @@ KeywordCounter.prototype.run = function()
         var chkSortKeywords = grpGlob_Right.add( "checkbox", undefined,"Sort keywords");
         wrapper.chkSortBox.push(chkSortKeywords);
         chkSortKeywords.alignment = ["right", "top"];
-        chkSortKeywords.enabled = true;
-        chkSortKeywords.value= true;
-
+        chkSortKeywords.enabled = true;     
+        chkSortKeywords.value= true;    
+            
         var chkAddKeywords = grpGlob_Right.add( "checkbox", undefined,"Add keywords");
         wrapper.chkAddBox.push(chkAddKeywords);
         chkAddKeywords.alignment = ["right", "top"];
-        chkAddKeywords.enabled = true;
+        chkAddKeywords.enabled = true;      
+        chkAddKeywords.value= false;    
+        
+         var chkCloneTitle = grpGlob_Right.add( "checkbox", undefined,"Title->Decription");
+        wrapper.chkCloneTitleBox.push(chkCloneTitle);
+        chkAddKeywords.alignment = ["right", "top"];
+        chkAddKeywords.enabled = true;      
+        chkAddKeywords.value= false;
+        
+         var chkCloneDescr = grpGlob_Right.add( "checkbox", undefined,"Decription->Title");
+        wrapper.chkCloneDescrBox.push(chkCloneDescr);
+        chkAddKeywords.alignment = ["right", "top"];
+        chkAddKeywords.enabled = true;      
         chkAddKeywords.value= false;
 
+        chkCloneDescr.onClick = function()
+        {
+            if (chkCloneDescr.value == true && wrapper.chkSyncBox[0].value == true)
+                chkCloneTitle.value = false
+            else
+                chkCloneDescr.value = false;
+        }
+    
+        chkCloneTitle.onClick = function()
+        {
+            if (chkCloneTitle.value == true && wrapper.chkSyncBox[1].value == true)
+                chkCloneDescr.value = false
+            else
+                chkCloneTitle.value = false;
+        }
 
         btnSave.onClick = function()
         {
             if ( app.document.selections.length == 1 )
             {
                 editTitle = wrapper.editTitleRefs[0];
-                new_title =editTitle.text;
+                new_title = editTitle.text;
                 editDescr = wrapper.editDescrRefs[0];
                 new_descr = editDescr.text;
+                DescrToTitle = wrapper.chkCloneDescrBox[0];
+                TitleToDescr = wrapper.chkCloneTitleBox[0];
+                if ( DescrToTitle.value == true )
+                    new_title = new_desct;
+                if ( TitleToDescr.value == true )               
+                    new_descr = new_title;
                 editKeywords =  wrapper.editKeywordsRefs[0];
                 new_keywords = editKeywords.text.split(",");
                 for (var k  =0 ; k < new_keywords.length; k++)
                 {
                         new_keywords[k] = new_keywords[k].trim();
                 }
-                saveMetadata(app.document.selections[0],
-                                    new_title,
-                                    new_descr,
-                                    new_keywords,
+                saveMetadata(app.document.selections[0], 
+                                    new_title, 
+                                    new_descr, 
+                                    new_keywords, 
                                     { sort:wrapper.chkSortBox[0].value,
                                     append:false } );
                 reselectFiles();
-            }
-            else
+            } 
+            else 
             {
                 alert("Metadata save only for one file", "Error", errorIcon)
-            }
-        }
-
+            }           
+        }   
+        
         btnSync.onClick = function()
         {
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
                 alert("Please select checkbox");
             else
             {
-                syncMetadata(wrapper.masterThumb[0], app.document.selections,
-                        { title:wrapper.chkSyncBox[0].value,
-                            descr:wrapper.chkSyncBox[1].value,
+                syncMetadata(wrapper.masterThumb[0], app.document.selections, 
+                        { title:wrapper.chkSyncBox[0].value, 
+                            descr:wrapper.chkSyncBox[1].value, 
                             keywords:wrapper.chkSyncBox[2].value,
                             sort:wrapper.chkSortBox[0].value,
-                            append:wrapper.chkAddBox[0].value})
+                            append:wrapper.chkAddBox[0].value,
+                            titletodescr:wrapper.chkCloneTitleBox[0].value, 
+                            descrtotitle:wrapper.chkCloneDescrBox[0].value})
                 reselectFiles();
             }
         }
-
+        
         btnCopy.onClick = function()
         {
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
@@ -479,7 +521,7 @@ KeywordCounter.prototype.run = function()
                 wrapper.flags.clipEmpty = false;
             }
         }
-
+    
         btnPaste.onClick = function()
         {
             if (!wrapper.chkSyncBox[0].value && !wrapper.chkSyncBox[1].value && !wrapper.chkSyncBox[2].value)
@@ -490,28 +532,30 @@ KeywordCounter.prototype.run = function()
                 reselectFiles();
             }
 
-        }
-
+        }   
+        
     }
 
-    onThumbSelection = function( evt ) {
+    onThumbSelection = function( evt ) {    
             if ( evt.type == "selectionsChanged" ) {
-                if (  app.document.selections.length > 0 && app.document.selections[0].type == "file")
+                if (  app.document.selections.length > 0 && app.document.selections[0].type == "file") 
                 {
                     if (app.document.selections.length == 1)
                     {
                         wrapper.masterThumb.length = 0;
                         wrapper.masterThumb.push(app.document.selections[0]);
-                        md = app.document.selections[0].synchronousMetadata;
-                        md.namespace =  "http://purl.org/dc/elements/1.1/";
-                        changeTotal( md.subject.length );
-                        changeKeywords(  md.subject ? md.subject.join(", ") : "" );
-                        changeTitle( md.title ? md.title[0] : "");
-                        changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
-                        changeDescription( md.description ? md.description[0] : "");
-                        changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
-                        changeFilename(app.document.selections[0].name);
-                    }
+                        if (md = app.document.selections[0].synchronousMetadata)
+                           {
+                                md.namespace =  "http://purl.org/dc/elements/1.1/";
+                                changeTotal( md.subject.length );
+                                changeKeywords(  md.subject ? md.subject.join(", ") : "" );
+                                changeTitle( md.title ? md.title[0] : "");
+                                changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
+                                changeDescription( md.description ? md.description[0] : "");
+                                changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
+                                changeFilename(app.document.selections[0].name);
+                           }
+                    } 
                     else
                     {
                         var flag = true;
@@ -519,7 +563,7 @@ KeywordCounter.prototype.run = function()
                         {
                                 if ( app.document.selections[i].name == wrapper.masterThumb[0].name ) { flag = false ; break;}
                         }
-
+                    
                         if (flag)
                         {
                             wrapper.masterThumb.length = 0;
@@ -532,7 +576,7 @@ KeywordCounter.prototype.run = function()
                             changeTotalTitle( md.title ? "words: "+(md.title[0].trim().split(/\s+/)).length +" | chars: "+ md.title[0].length : "words: 0 | chars: 0" );
                             changeDescription( md.description ? md.description[0] : "");
                             changeTotalDescr( md.description ? "words: "+(md.description[0].trim().split(/\s+/)).length +" | chars: "+md.description[0].length : "words: 0 | chars: 0" );
-                            changeFilename(app.document.selections[0].name);
+                            changeFilename(app.document.selections[0].name);                                
                         }
                     }
 
@@ -544,30 +588,30 @@ KeywordCounter.prototype.run = function()
                         for (var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                         {
                             wrapper.chkSyncBox[i].enabled = true;
-                        }
+                        }                       
                     }
-                    else
+                    else 
                     {
                         wrapper.fieldFilenameRefs[1].enabled = false; // Save button
                         wrapper.fieldFilenameRefs[3].enabled = false; // Copy button
                         wrapper.fieldFilenameRefs[4].enabled = false; // Paste button
                     }
-
+                                        
                     if ( app.document.selections.length > 1 )
                     {
                         wrapper.fieldFilenameRefs[2].enabled = true; // Sync button
                         if (!wrapper.flags.clipEmpty) wrapper.fieldFilenameRefs[4].enabled = true; // Paste button
                         for ( var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                         {
-                            wrapper.chkSyncBox[i].enabled = true;
+                            wrapper.chkSyncBox[i].enabled = true; 
                         }
                     }
-                    else
+                    else 
                     {
                         wrapper.fieldFilenameRefs[2].enabled = false; // Sync button
                     }
                 }
-                else
+                else 
                 {
                     changeTotal( 0);
                     changeKeywords( "");
@@ -584,10 +628,10 @@ KeywordCounter.prototype.run = function()
                     for ( var i  =0 ; i < wrapper.chkSyncBox.length; i++)
                     {
                         wrapper.chkSyncBox[i].enabled = false;
-                    }
+                    }                           
                 }
             }
-            return { handled: false };
+            return { handled: false }; 
     }
 
     function addKeywordPalette(doc)
@@ -596,7 +640,7 @@ KeywordCounter.prototype.run = function()
         // Create the TabbedPalette object, of type "script"
         var keywordPalette = new TabbedPalette( doc, "Stock Palette", "KeyUIPalette", "script" );
         wrapper.paletteRefs.push(keywordPalette);
-
+        
         keywordPalette.content.onResize = function()
         {
             var b = this.bounds;
@@ -606,8 +650,8 @@ KeywordCounter.prototype.run = function()
             this.layout.resize(true);
             wrapper.paletteRefs[0].content.layout.layout(true);
 
-        }
-
+        }       
+        
         var pnl = keywordPalette.content.add("panel", undefined , "");
         keywordPalette.margins=5;
         keywordPalette.spacing=5;
@@ -620,27 +664,27 @@ KeywordCounter.prototype.run = function()
         mainBtnGp.spacing=5;
         mainBtnGp.alignment = ["fill", "fill"];
         mainBtnGp.alignChildren = ["fill", "fill"];
-
+        
         // Create a ScriptUI panel to be displayed as the tab contents.
         addTitlePanel(mainBtnGp);
         addDescrPanel(mainBtnGp);
         addKeywordsPanel(mainBtnGp);
         addSyncPanel(mainBtnGp);
-
+        
         keywordPalette.content.layout.layout(true);
         keywordPalette.content.layout.resize(true);
 
     }
 
-    onDocCreate = function( evt ) {
+    onDocCreate = function( evt ) { 
         if( evt.object.constructor.name == "Document" ){
             if( evt.type == "create" ) {
                 addKeywordPalette(app.document);
-                app.eventHandlers.push( { handler: onThumbSelection} );
+                app.eventHandlers.push( { handler: onThumbSelection} );             
             }
         }
-    }
-
+    }   
+    
     // Add the palette to all open Bridge browser windows
     if ($.level == 0 )
     {
@@ -655,25 +699,24 @@ KeywordCounter.prototype.run = function()
         addKeywordPalette(app.document);
         app.eventHandlers.push( { handler: onThumbSelection} );
     }
+} 
+
+KeywordCounter.prototype.canRun = function() 
+{ 
+    // Must run in Bridge 
+    if(BridgeTalk.appName == "bridge") 
+    { 
+        return true; 
+    }  
+    // Fail if these preconditions are not met. 
+    // Bridge must be running, 
+    // The menu must not already exist. 
+    $.writeln("ERROR:: Cannot run Keyword counter"); 
+    $.writeln(this.requiredContext); 
+    return false; 
+} 
+
+
+if(typeof(KeywordCounter_unitTest) == "undefined") { 
+    new KeywordCounter().run(); 
 }
-
-KeywordCounter.prototype.canRun = function()
-{
-    // Must run in Bridge
-    if(BridgeTalk.appName == "bridge")
-    {
-        return true;
-    }
-    // Fail if these preconditions are not met.
-    // Bridge must be running,
-    // The menu must not already exist.
-    $.writeln("ERROR:: Cannot run Keyword counter");
-    $.writeln(this.requiredContext);
-    return false;
-}
-
-
-if(typeof(KeywordCounter_unitTest) == "undefined") {
-    new KeywordCounter().run();
-}
-
