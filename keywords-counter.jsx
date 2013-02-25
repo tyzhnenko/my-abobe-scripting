@@ -22,6 +22,7 @@
     Changelog
     0.73
      - fix error if selection no have metadata (fixes Issue #24)
+     - allow copy Title to Description and backward (fixes Issue #23)
     0.72
      - fix sync with empty title and/or descr (fixes Issue #18)
     0.71
