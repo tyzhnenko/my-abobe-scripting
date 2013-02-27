@@ -1,7 +1,7 @@
 /*
 .--------------------------------------------------------------------------.
 |    Software: Keyword counter                                             |
-|     Version: 0.73                                                        |
+|     Version: 0.74                                                        |
 |        Site: http://code.google.com/p/my-abobe-scripting/                |
 | Description: This script show total keywords in file and have            |
 |                               many use for for microstocker fuctional.   |
