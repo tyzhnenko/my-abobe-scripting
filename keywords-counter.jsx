@@ -1,7 +1,7 @@
 /*
 .--------------------------------------------------------------------------.
 |    Software: Keyword counter                                             |
-|     Version: 0.74                                                        |
+|     Version: 0.75                                                        |
 |        Site: http://code.google.com/p/my-abobe-scripting/                |
 | Description: This script show total keywords in file and have            |
 |                               many use for for microstocker fuctional.   |
@@ -20,6 +20,9 @@
 */
 /*
     Changelog
+    0.75
+     - fix problem with live update non RAW images
+     - typo fixes
     0.74
      - change default sort key - off (fixes Issue #25)
      - reload palette when keywords changed in KEYWORDS PALETTE (fixes Issue #17)
@@ -86,7 +89,7 @@ function KeywordCounter()
     this.requiredContext = "\tAdobe Bridge CS4 must be running.\n\tExecute against Bridge CS4 as the Target.\n"; 
     $.level = 0; // Debugging level 
 
-    this.version = "0.74";
+    this.version = "0.75";
     this.author = "Tyzhenenko Dmitry";
 } 
     
@@ -442,13 +445,13 @@ KeywordCounter.prototype.run = function()
         chkAddKeywords.enabled = true;      
         chkAddKeywords.value= false;    
         
-        var chkCloneTitle = grpGlob_Right.add( "checkbox", undefined,"Title->Decr");
+        var chkCloneTitle = grpGlob_Right.add( "checkbox", undefined,"Title -> Decr");
         wrapper.chkCloneTitleBox.push(chkCloneTitle);
         chkAddKeywords.alignment = ["right", "top"];
         chkAddKeywords.enabled = true;      
         chkAddKeywords.value= false;
         
-        var chkCloneDescr = grpGlob_Right.add( "checkbox", undefined,"Decription->Title");
+        var chkCloneDescr = grpGlob_Right.add( "checkbox", undefined,"Decr -> Title");
         wrapper.chkCloneDescrBox.push(chkCloneDescr);
         chkAddKeywords.alignment = ["right", "top"];
         chkAddKeywords.enabled = true;      
@@ -607,14 +610,18 @@ KeywordCounter.prototype.run = function()
             xmp_path = img_path.substr(0, img_path.lastIndexOf(".")) + ".xmp";
             img_file = new File(img_path);
             xmp_file = new File(xmp_path);
-            if (wrapper.filename == img_file.name && wrapper.modified.toString() != xmp_file.modified.toString())
+            if (xmp_file.created == null)
+                tst_file = img_file;
+            else
+                tst_file = xmp_file;
+            if (wrapper.filename == img_file.name && 
+                wrapper.modified.toString() != tst_file.modified.toString())
             {
-                wrapper.modified = xmp_file.modified;
+                wrapper.modified = tst_file.modified;
                 if (md = app.document.selections[0].synchronousMetadata)
-                    fillPalette(md);             
+                    fillPalette(md);
             }
         }
-                       
     }
 
     reloadTask = function() {
@@ -627,12 +634,17 @@ KeywordCounter.prototype.run = function()
                     {
                         wrapper.masterThumb.length = 0;
                         wrapper.masterThumb.push(app.document.selections[0]);
+                        
                         img_path = app.document.selections[0].path;
                         xmp_path = img_path.substr(0, img_path.lastIndexOf(".")) + ".xmp";
                         img_file = new File(img_path);
                         xmp_file = new File(xmp_path);
+                        if (xmp_file.created == null)
+                            tst_file = img_file;
+                        else
+                            tst_file = xmp_file;                        
                         wrapper.filename = img_file.name; 
-                        wrapper.modified = xmp_file.modified;
+                        wrapper.modified = tst_file.modified;                                    
                         
                         if (md = app.document.selections[0].synchronousMetadata)
                             fillPalette(md);
@@ -644,7 +656,10 @@ KeywordCounter.prototype.run = function()
                         var flag = true;
                         for ( var i  =0 ; i < app.document.selections.length; i++ )
                         {
-                                if ( app.document.selections[i].name == wrapper.masterThumb[0].name ) { flag = false ; break;}
+                                if ( wrapper.masterThumb.lenght > 0 && app.document.selections[i].name == wrapper.masterThumb[0].name ) { 
+                                    flag = false ; 
+                                    break;
+                                }
                         }
                     
                         if (flag)
